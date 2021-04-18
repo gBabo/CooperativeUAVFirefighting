@@ -2,6 +2,7 @@ import pygame
 # from menu import *
 from settings import *
 from tile import *
+from map import *
 
 
 class Simulation:
@@ -76,26 +77,17 @@ class Simulation:
                     Tile(self, "forest", x + TILE_MARGIN_X, y + TILE_MARGIN_Y, RED))"""
 
     def create_tiles(self):
-        file = open("map.txt", "r")
-        line = file.readline()
-        while line:
-            map_list = line.split(", ")
-            print(map_list)
-            if map_list[0] == "population":
+        for attr_list in sim_map:
+            if attr_list[0] == "population":
                 self.tile_group.add(
-                    Tile(self, map_list[0], int(map_list[1]) + TILE_MARGIN_X, int(map_list[2]) + TILE_MARGIN_Y, RED))
-                line = file.readline()
-            if map_list[0] == "road":
+                    Tile(self, attr_list[0], int(attr_list[1]) + TILE_MARGIN_X, int(attr_list[2]) + TILE_MARGIN_Y, RED))
+            if attr_list[0] == "road":
                 self.tile_group.add(
-                    Tile(self, map_list[0], int(map_list[1]) + TILE_MARGIN_X, int(map_list[2]) + TILE_MARGIN_Y, BLACK))
-                line = file.readline()
-            if map_list[0] == "forest":
+                    Tile(self, attr_list[0], int(attr_list[1]) + TILE_MARGIN_X, int(attr_list[2]) + TILE_MARGIN_Y, BLACK))
+            if attr_list[0] == "forest":
                 self.tile_group.add(
-                    Tile(self, map_list[0], int(map_list[1]) + TILE_MARGIN_X, int(map_list[2]) + TILE_MARGIN_Y, GREEN))
-                line = file.readline()
-            if map_list[0] == "body of water":
+                    Tile(self, attr_list[0], int(attr_list[1]) + TILE_MARGIN_X, int(attr_list[2]) + TILE_MARGIN_Y, GREEN))
+            if attr_list[0] == "body of water":
                 self.tile_group.add(
-                    Tile(self, map_list[0], int(map_list[1]) + TILE_MARGIN_X, int(map_list[2]) + TILE_MARGIN_Y, BLUE))
-                line = file.readline()
-        file.close()
+                    Tile(self, attr_list[0], int(attr_list[1]) + TILE_MARGIN_X, int(attr_list[2]) + TILE_MARGIN_Y, BLUE))
 
