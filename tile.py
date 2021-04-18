@@ -12,4 +12,4 @@ class Tile(pygame.sprite.Sprite):
         self.kind = kind
         self.x = x
         self.y = y
-        self.rect.center = [x, y]
+        self.rect.center = [int((x * TILESIZE) + TILE_MARGIN_X), int((y * TILESIZE) + TILE_MARGIN_Y)]
