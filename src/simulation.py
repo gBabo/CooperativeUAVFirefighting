@@ -1,3 +1,5 @@
+import random
+
 from tile import *
 from drone import *
 from map2 import *
@@ -20,7 +22,7 @@ class Simulation:
         self.tile_list = []
         # to put created tiles dont know/can do the same with the Group above
         self.drone_list = []
-        self.wind = Wind(Direction.North)  # Static for testing
+        self.wind = Wind(Direction.North, random.randint(1, 10))  # Static for testing
         self.wildfire_list: List[Wildfire] = []
 
     def simulation_loop(self):
@@ -142,4 +144,5 @@ class Simulation:
 
     def create_wildfires(self):
         point = Point(16, 16)
-        self.wildfire_list.append(Wildfire(1, point, 1, [Fire(point)]))
+        self.wildfire_list.append(Wildfire(1, point, 1,
+                                           [Fire(point, intensity=random.randint(1, 10))]))

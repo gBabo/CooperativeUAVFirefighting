@@ -1,3 +1,4 @@
+import random
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import List
@@ -45,18 +46,25 @@ def expand_wildfire(wild: Wildfire, wind: Wind) -> Wildfire:
     start_location = wild.start_location
     start_time = wild.start_time + 1
     new_tiles = []
+    direct = [Direction.North, Direction.South, Direction.East, Direction.West] \
+        + (wind.strength - 1) * [wind.direction]
 
     for fire_tile in wild.tiles:
         new_tiles.append(fire_tile)
-        if fire_tile.expandable:  # TODO Expand on probability
-            if wind.direction == Direction.North:
-                fire = Fire(Point(fire_tile.tile.x, fire_tile.tile.y - 1))
-            elif wind.direction == Direction.South:
-                fire = Fire(Point(fire_tile.tile.x, fire_tile.tile.y + 1))
-            elif wind.direction == Direction.East:
-                fire = Fire(Point(fire_tile.tile.x + 1, fire_tile.tile.y))
+        if fire_tile.expandable and random.randint(1, 10) <= fire_tile.intensity:  # TODO Expand on probability
+            choice = random.choice(direct)
+            if choice == Direction.North:
+                fire = Fire(Point(fire_tile.tile.x, fire_tile.tile.y - 1),
+                            intensity=fire_tile.intensity)
+            elif choice == Direction.South:
+                fire = Fire(Point(fire_tile.tile.x, fire_tile.tile.y + 1),
+                            intensity=fire_tile.intensity)
+            elif choice == Direction.East:
+                fire = Fire(Point(fire_tile.tile.x + 1, fire_tile.tile.y),
+                            intensity=fire_tile.intensity)
             else:
-                fire = Fire(Point(fire_tile.tile.x - 1, fire_tile.tile.y))
+                fire = Fire(Point(fire_tile.tile.x - 1, fire_tile.tile.y),
+                            intensity=fire_tile.intensity)
             if fire not in new_tiles:
                 new_tiles.append(fire)
 
