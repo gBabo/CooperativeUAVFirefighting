@@ -1,5 +1,3 @@
-import random
-
 from tile import *
 from drone import *
 from map2 import *
@@ -30,7 +28,9 @@ class Simulation:
             self.check_events()
             for agent in self.drone_list:
                 agent.agent_decision()
-            self.wildfire_list = [expand_wildfire(wild, self.wind) for wild in self.wildfire_list]
+            for wild in self.wildfire_list:
+                update_wildfire(wild)
+                expand_wildfire(wild, self.wind)
             self.update()
             self.draw()
             self.reset_keys()
