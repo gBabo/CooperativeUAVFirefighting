@@ -41,17 +41,20 @@ class Wildfire:
         return len(self.tiles) - 1
 
 
-def expand_wildfire(wild: Wildfire, wind: Wind) -> Wildfire:
-    wid = wild.wid
-    start_location = wild.start_location
-    start_time = wild.start_time + 1
+# TODO updates fire tiles expandable and intensity
+def update_wildfire(wild: Wildfire) -> None:
+    pass
+
+
+def expand_wildfire(wild: Wildfire, wind: Wind) -> None:
+    wild.start_time += 1
     new_tiles = []
     direct = [Direction.North, Direction.South, Direction.East, Direction.West] \
         + (wind.strength - 1) * [wind.direction]
 
     for fire_tile in wild.tiles:
         new_tiles.append(fire_tile)
-        if fire_tile.expandable and random.randint(1, 10) <= fire_tile.intensity:  # TODO Expand on probability
+        if fire_tile.expandable and random.randint(1, 10) <= fire_tile.intensity:
             choice = random.choice(direct)
             if choice == Direction.North:
                 fire = Fire(Point(fire_tile.tile.x, fire_tile.tile.y - 1),
@@ -67,5 +70,4 @@ def expand_wildfire(wild: Wildfire, wind: Wind) -> Wildfire:
                             intensity=fire_tile.intensity)
             if fire not in new_tiles:
                 new_tiles.append(fire)
-
-    return Wildfire(wid, start_location, start_time, new_tiles)
+    wild.tiles = new_tiles
