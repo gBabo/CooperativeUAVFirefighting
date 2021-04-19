@@ -26,15 +26,14 @@ class Point:
 @dataclass
 class Fire:
     tile: Point
-    expandable: bool = True
-    intensity: int = 10  # MAX Intensity
+    intensity: float = field(default=10, compare=False)  # MAX Intensity
 
 
 @dataclass(order=True, repr=True)
 class Wildfire:
     wid: int
-    start_location: Point
-    start_time: int = 1
+    start_location: Point = field(compare=False)
+    start_time: int = field(default=1, compare=False)
     tiles: List[Fire] = field(default_factory=list, compare=False)
 
     def fire_spread(self):
@@ -54,7 +53,7 @@ def expand_wildfire(wild: Wildfire, wind: Wind) -> None:
 
     for fire_tile in wild.tiles:
         new_tiles.append(fire_tile)
-        if fire_tile.expandable and random.randint(1, 10) <= fire_tile.intensity:
+        if random.randint(1, 10) <= fire_tile.intensity:
             choice = random.choice(direct)
             if choice == Direction.North:
                 fire = Fire(Point(fire_tile.tile.x, fire_tile.tile.y - 1),
