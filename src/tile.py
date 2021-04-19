@@ -12,4 +12,5 @@ class Tile(pygame.sprite.Sprite):
         self.kind = kind
         self.x = x
         self.y = y
+        self.on_fire = False
         self.rect.center = [int((x * TILESIZE) + TILE_MARGIN_X), int((y * TILESIZE) + TILE_MARGIN_Y)]

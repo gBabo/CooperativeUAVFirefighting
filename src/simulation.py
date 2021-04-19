@@ -1,6 +1,7 @@
 from tile import *
 from drone import *
 from map2 import *
+from weather import *
 import time
 
 
@@ -19,12 +20,15 @@ class Simulation:
         self.tile_list = []
         # to put created tiles dont know/can do the same with the Group above
         self.drone_list = []
+        self.wind = Wind(Direction.North)  # Static for testing
+        self.wildfire_list: List[Wildfire] = []
 
     def simulation_loop(self):
         while self.playing:
             self.check_events()
             for agent in self.drone_list:
                 agent.agent_decision()
+            self.wildfire_list = [expand_wildfire(wild, self.wind) for wild in self.wildfire_list]
             self.update()
             self.draw()
             self.reset_keys()
@@ -52,6 +56,7 @@ class Simulation:
         self.drone_group.update()
 
     def draw(self):
+        self.update_tiles()
         self.draw_tiles()
         self.draw_grid()
         self.draw_drones()
@@ -68,12 +73,23 @@ class Simulation:
     def draw_tiles(self):
         self.tile_group.draw(self.screen)
 
+    def update_tiles(self):
+        for tile in self.tile_list:
+            if tile.on_fire:
+                continue
+            for wildfire in self.wildfire_list:
+                for fire in wildfire.tiles:
+                    if tile.x == fire.tile.x and tile.y == fire.tile.y:
+                        tile.image.fill(ORANGE)
+                        tile.on_fire = True
+
     def draw_drones(self):
         self.drone_group.draw(self.screen)
 
     def initiate(self):
         self.create_tiles()
         self.crete_drones()
+        self.create_wildfires()
 
     '''
     def create_tiles(self):
@@ -115,7 +131,7 @@ class Simulation:
                     self.tile_group.add(temp)
                     self.tile_list.append(temp)
                 if sim_map2[y][x][0] == "body of water":
-                    temp = Tile(self, sim_map2[x][y][0],  x, y, BLUE)
+                    temp = Tile(self, sim_map2[x][y][0], x, y, BLUE)
                     self.tile_group.add(temp)
                     self.tile_list.append(temp)
 
@@ -123,3 +139,7 @@ class Simulation:
         drone = Drone(self, 16, 16)
         self.drone_group.add(drone)
         self.drone_list.append(drone)
+
+    def create_wildfires(self):
+        point = Point(16, 16)
+        self.wildfire_list.append(Wildfire(1, point, 1, [Fire(point)]))
