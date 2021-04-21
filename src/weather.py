@@ -2,6 +2,7 @@ import random
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import List
+from util import Point
 
 
 class Direction(Enum):
@@ -18,14 +19,8 @@ class Wind:
 
 
 @dataclass
-class Point:
-    x: int
-    y: int
-
-
-@dataclass
 class Fire:
-    tile: Point
+    point: Point
     intensity: float = field(default=10, compare=False)  # MAX Intensity
 
 
@@ -56,16 +51,16 @@ def expand_wildfire(wild: Wildfire, wind: Wind) -> None:
         if random.randint(1, 10) <= fire_tile.intensity:
             choice = random.choice(direct)
             if choice == Direction.North:
-                fire = Fire(Point(fire_tile.tile.x, fire_tile.tile.y - 1),
+                fire = Fire(Point(fire_tile.point.x, fire_tile.point.y - 1),
                             intensity=fire_tile.intensity)
             elif choice == Direction.South:
-                fire = Fire(Point(fire_tile.tile.x, fire_tile.tile.y + 1),
+                fire = Fire(Point(fire_tile.point.x, fire_tile.point.y + 1),
                             intensity=fire_tile.intensity)
             elif choice == Direction.East:
-                fire = Fire(Point(fire_tile.tile.x + 1, fire_tile.tile.y),
+                fire = Fire(Point(fire_tile.point.x + 1, fire_tile.point.y),
                             intensity=fire_tile.intensity)
             else:
-                fire = Fire(Point(fire_tile.tile.x - 1, fire_tile.tile.y),
+                fire = Fire(Point(fire_tile.point.x - 1, fire_tile.point.y),
                             intensity=fire_tile.intensity)
             if fire not in new_tiles:
                 new_tiles.append(fire)

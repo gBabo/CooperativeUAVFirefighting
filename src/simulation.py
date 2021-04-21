@@ -1,6 +1,4 @@
-import random
-
-from tile import *
+from tile import Population, Forest, Road, Water
 from drone import *
 from map2 import *
 from weather import *
@@ -19,7 +17,7 @@ class Simulation:
         # use to draw and do update to drones
         self.drone_group = pygame.sprite.Group()
         # to put created tiles dont know/can do the same with the Group above
-        self.tile_list = []
+        self.tile_dict = {}
         # to put created tiles dont know/can do the same with the Group above
         self.drone_list = []
         self.wind = Wind(
@@ -80,14 +78,12 @@ class Simulation:
         self.tile_group.draw(self.screen)
 
     def update_tiles(self):
-        for tile in self.tile_list:
-            if tile.on_fire:
-                continue
-            for wildfire in self.wildfire_list:
-                for fire in wildfire.tiles:
-                    if tile.x == fire.tile.x and tile.y == fire.tile.y:
-                        tile.image.fill(ORANGE)
-                        tile.on_fire = True
+        for wildfire in self.wildfire_list:
+            for fire in wildfire.tiles:
+                if self.tile_dict[fire.point].on_fire:
+                    continue
+                self.tile_dict[fire.point].image.fill(ORANGE)
+                self.tile_dict[fire.point].on_fire = True
 
     def draw_drones(self):
         self.drone_group.draw(self.screen)
@@ -125,21 +121,15 @@ class Simulation:
         for y in range(0, 32, 1):
             for x in range(0, 32, 1):
                 if sim_map2[y][x][0] == "population":
-                    temp = Tile(self, sim_map2[x][y][0], x, y, RED)
-                    self.tile_group.add(temp)
-                    self.tile_list.append(temp)
-                if sim_map2[y][x][0] == "road":
-                    temp = Tile(self, sim_map2[x][y][0], x, y, BLACK)
-                    self.tile_group.add(temp)
-                    self.tile_list.append(temp)
-                if sim_map2[y][x][0] == "forest":
-                    temp = Tile(self, sim_map2[x][y][0], x, y, GREEN)
-                    self.tile_group.add(temp)
-                    self.tile_list.append(temp)
-                if sim_map2[y][x][0] == "body of water":
-                    temp = Tile(self, sim_map2[x][y][0], x, y, BLUE)
-                    self.tile_group.add(temp)
-                    self.tile_list.append(temp)
+                    tile = Population(self, x, y)
+                elif sim_map2[y][x][0] == "road":
+                    tile = Road(self, x, y)
+                elif sim_map2[y][x][0] == "forest":
+                    tile = Forest(self, x, y)
+                else:  # Water
+                    tile = Water(self, x, y)
+                self.tile_group.add(tile)
+                self.tile_dict[tile.point] = tile
 
     def crete_drones(self):
         drone = Drone(self, 16, 16)
