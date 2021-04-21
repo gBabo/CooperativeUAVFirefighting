@@ -1,5 +1,4 @@
 import pygame
-from dataclasses import dataclass
 from util import Point
 from settings import *
 

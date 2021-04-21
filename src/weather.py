@@ -44,7 +44,7 @@ def expand_wildfire(wild: Wildfire, wind: Wind) -> None:
     wild.start_time += 1
     new_tiles = []
     direct = [Direction.North, Direction.South, Direction.East, Direction.West] \
-        + (wind.strength - 1) * [wind.direction]
+             + (wind.strength - 1) * [wind.direction]
 
     for fire_tile in wild.tiles:
         new_tiles.append(fire_tile)
