@@ -26,3 +26,8 @@ TILE_MARGIN_Y = 159
 
 # dimension of the tile
 TILESIZE = 16
+
+# constants of the drone
+DRONESIZE = 12
+WATERCAPACITY = 100
+BATTERY = 100

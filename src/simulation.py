@@ -11,7 +11,6 @@ class Simulation:
         self.running, self.playing = True, True
         self.UP_KEY, self.DOWN_KEY, self.START_KEY, self.BACK_KEY = False, False, False, False
         self.screen = pygame.display.set_mode((DISPLAY_W, DISPLAY_H))
-        self.font_name = pygame.font.get_default_font()
         # use to draw and do update to tiles
         self.tile_group = pygame.sprite.Group()
         # use to draw and do update to drones
@@ -55,9 +54,21 @@ class Simulation:
     def reset_keys(self):
         self.UP_KEY, self.DOWN_KEY, self.START_KEY, self.BACK_KEY = False, False, False, False
 
+# update things
+
     def update(self):
         self.tile_group.update()
         self.drone_group.update()
+
+    def update_tiles(self):
+        for wildfire in self.wildfire_list:
+            for fire in wildfire.tiles:
+                if self.tile_dict[fire.point].on_fire:
+                    continue
+                self.tile_dict[fire.point].image.fill(ORANGE)
+                self.tile_dict[fire.point].on_fire = True
+
+# draw things
 
     def draw(self):
         self.update_tiles()
@@ -77,45 +88,15 @@ class Simulation:
     def draw_tiles(self):
         self.tile_group.draw(self.screen)
 
-    def update_tiles(self):
-        for wildfire in self.wildfire_list:
-            for fire in wildfire.tiles:
-                if self.tile_dict[fire.point].on_fire:
-                    continue
-                self.tile_dict[fire.point].image.fill(ORANGE)
-                self.tile_dict[fire.point].on_fire = True
-
     def draw_drones(self):
         self.drone_group.draw(self.screen)
+
+# inicitate and create things
 
     def initiate(self):
         self.create_tiles()
         self.crete_drones()
         self.create_wildfires()
-
-    '''
-    def create_tiles(self):
-        for attr_list in sim_map:
-            if attr_list[0] == "population":
-                temp = Tile(self, attr_list[0], int(attr_list[1]) + TILE_MARGIN_X, int(attr_list[2]) + TILE_MARGIN_Y,
-                            RED)
-                self.tile_group.add(temp)
-                self.tile_list.append(temp)
-            if attr_list[0] == "road":
-                temp = Tile(self, attr_list[0], int(attr_list[1]) + TILE_MARGIN_X, int(attr_list[2]) + TILE_MARGIN_Y,
-                            BLACK)
-                self.tile_group.add(temp)
-                self.tile_list.append(temp)
-            if attr_list[0] == "forest":
-                temp = Tile(self, attr_list[0], int(attr_list[1]) + TILE_MARGIN_X, int(attr_list[2]) + TILE_MARGIN_Y,
-                            GREEN)
-                self.tile_group.add(temp)
-                self.tile_list.append(temp)
-            if attr_list[0] == "body of water":
-                temp = Tile(self, attr_list[0], int(attr_list[1]) + TILE_MARGIN_X, int(attr_list[2]) + TILE_MARGIN_Y,
-                            BLUE)
-                self.tile_group.add(temp)
-                self.tile_list.append(temp)'''
 
     def create_tiles(self):
         for y in range(0, 32, 1):
@@ -132,7 +113,7 @@ class Simulation:
                 self.tile_dict[tile.point] = tile
 
     def crete_drones(self):
-        drone = Drone(self, 16, 16)
+        drone = DroneReactive(self, 16, 16)
         self.drone_group.add(drone)
         self.drone_list.append(drone)
 
