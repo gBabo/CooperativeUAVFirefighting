@@ -32,7 +32,7 @@ class Simulation:
                 agent.agent_decision()
             for wild in self.wildfire_list:
                 update_wildfire(wild)
-                expand_wildfire(wild, self.wind)
+                expand_wildfire(wild, self.tile_dict, self.wind)
             self.update()
             self.draw()
             self.reset_keys()
@@ -138,5 +138,10 @@ class Simulation:
 
     def create_wildfires(self):
         point = Point(16, 16)
-        self.wildfire_list.append(Wildfire(1, point, 1,
-                                           [Fire(point, intensity=random.randint(1, 10))]))
+        fire = self.tile_dict[Point(16, 16)]
+        fire.on_fire = True
+        fire.image.fill(ORANGE)
+        fire.fire_intensity = random.randint(1, 10)
+        wild = Wildfire(1, point, 1)
+        wild.add_fire(fire)
+        self.wildfire_list.append(wild)
