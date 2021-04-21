@@ -9,7 +9,7 @@ class Drone(pygame.sprite.Sprite):
         super().__init__()
         self.simulation = simulation
         self.image = pygame.Surface((12, 12))
-        self.image.fill(LIGHTGREY)
+        self.image.fill(YELLOW)
         self.rect = self.image.get_rect()
         self.x = x
         self.y = y
