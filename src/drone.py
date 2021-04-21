@@ -71,25 +71,27 @@ class Drone(pygame.sprite.Sprite, ABC):
 class DroneReactive(Drone):
     def __init__(self, simulation, x, y):
         super().__init__(simulation, x, y)
-        self.position = sim_map2[y][x]
+        self.position_type = sim_map2[y][x][0]
 
     def agent_decision(self) -> None:
-        if self.position[0] == "population":
+        if self.position_type == "population":
             if self.needs_recharge() or self.needs_refuel():
                 self.recharge()
                 self.refuel()
             else:
-
                 self.move(random.randint(0, 3))
+                self.position_type = sim_map2[self.point.y][self.point.x][0]
                 self.battery -= 10
-        elif self.position[0] == "body of water":
+        elif self.position_type == "body of water":
             if self.needs_refuel():
                 self.refuel()
             else:
                 self.move(random.randint(0, 3))
+                self.position_type = sim_map2[self.point.y][self.point.x][0]
                 self.battery -= 10
         else:
             self.move(random.randint(0, 3))
+            self.position_type = sim_map2[self.point.y][self.point.x][0]
             self.battery -= 10
 
     def needs_recharge(self) -> bool:
