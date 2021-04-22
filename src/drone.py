@@ -2,14 +2,8 @@ import pygame
 from settings import *
 from map2 import *
 import random
-from dataclasses import dataclass
 from abc import ABC, abstractmethod
-
-
-@dataclass
-class Point:
-    x: int
-    y: int
+from util import Point
 
 
 class Drone(pygame.sprite.Sprite, ABC):
@@ -36,22 +30,22 @@ class Drone(pygame.sprite.Sprite, ABC):
         if direction == 0:
             # protect border limit
             if self.point.x < 31:
-                self.point.x += 1
+                self.point = Point(self.point.x + 1, self.point.y)
                 self.rect.center = [int((self.point.x * TILESIZE) + TILE_MARGIN_X),
                                     int((self.point.y * TILESIZE) + TILE_MARGIN_Y)]
         elif direction == 1:
             if self.point.x > 0:
-                self.point.x -= 1
+                self.point = Point(self.point.x - 1, self.point.y)
                 self.rect.center = [int((self.point.x * TILESIZE) + TILE_MARGIN_X),
                                     int((self.point.y * TILESIZE) + TILE_MARGIN_Y)]
         elif direction == 2:
             if self.point.y < 31:
-                self.point.y += 1
+                self.point = self.point = Point(self.point.x, self.point.y + 1)
                 self.rect.center = [int((self.point.x * TILESIZE) + TILE_MARGIN_X),
                                     int((self.point.y * TILESIZE) + TILE_MARGIN_Y)]
         else:
             if self.point.y > 0:
-                self.point.y -= 1
+                self.point = self.point = Point(self.point.x, self.point.y - 1)
                 self.rect.center = [int((self.point.x * TILESIZE) + TILE_MARGIN_X),
                                     int((self.point.y * TILESIZE) + TILE_MARGIN_Y)]
 
