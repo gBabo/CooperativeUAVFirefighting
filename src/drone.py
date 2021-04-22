@@ -40,12 +40,12 @@ class Drone(pygame.sprite.Sprite, ABC):
                                     int((self.point.y * TILESIZE) + TILE_MARGIN_Y)]
         elif direction == 2:
             if self.point.y < 31:
-                self.point = self.point = Point(self.point.x, self.point.y + 1)
+                self.point = Point(self.point.x, self.point.y + 1)
                 self.rect.center = [int((self.point.x * TILESIZE) + TILE_MARGIN_X),
                                     int((self.point.y * TILESIZE) + TILE_MARGIN_Y)]
         else:
             if self.point.y > 0:
-                self.point = self.point = Point(self.point.x, self.point.y - 1)
+                self.point = Point(self.point.x, self.point.y - 1)
                 self.rect.center = [int((self.point.x * TILESIZE) + TILE_MARGIN_X),
                                     int((self.point.y * TILESIZE) + TILE_MARGIN_Y)]
 
