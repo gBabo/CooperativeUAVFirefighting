@@ -2,6 +2,7 @@ from tile import Population, Forest, Road, Water
 from drone import *
 from map2 import *
 from weather import *
+from sector import *
 import time
 
 
@@ -24,6 +25,8 @@ class Simulation:
             random.randint(1, 10))  # Static for testing
         self.wildfire_list: List[Wildfire] = []
 
+        self.sector_list: List[Sector] = []
+
     def simulation_loop(self):
         while self.playing:
             self.check_events()
@@ -32,6 +35,11 @@ class Simulation:
             for wild in self.wildfire_list:
                 update_wildfire(wild)
                 expand_wildfire(wild, self.tile_dict, self.wind)
+
+            for sector in self.sector_list:
+                if sector.calculate_fire_alert(self.wildfire_list):
+                    print("FIRE! in sector "+str(sector.sectorID))
+            
             self.update()
             self.draw()
             self.reset_keys()
@@ -96,6 +104,7 @@ class Simulation:
     def initiate(self):
         self.create_tiles()
         self.crete_drones()
+        self.create_sectors()
         self.create_wildfires()
 
     def create_tiles(self):
@@ -116,6 +125,17 @@ class Simulation:
         drone = DroneReactive(self, 16, 16)
         self.drone_group.add(drone)
         self.drone_list.append(drone)
+
+    def create_sectors(self):
+        sector_id = 1
+        sector_size = 8
+        for y in range(0, 32//sector_size, 1):
+            for x in range(0, 32//sector_size, 1):
+                #id, probability per fire, size
+                sector = Sector(sector_id, 4/64, sector_size)
+                sector_id = sector_id + 1
+                sector.create_sector(x*sector_size, y*sector_size, self.tile_dict)
+                self.sector_list.append(sector)
 
     def create_wildfires(self):
         point = Point(16, 16)
