@@ -61,12 +61,20 @@ class Simulation:
         self.drone_group.update()
 
     def update_tiles(self):
-        for wildfire in self.wildfire_list:
-            for fire in wildfire.tiles:
-                if self.tile_dict[fire.point].on_fire:
-                    continue
-                self.tile_dict[fire.point].image.fill(ORANGE)
-                self.tile_dict[fire.point].on_fire = True
+        for tile in self.tile_dict.values():
+            if tile.on_fire:
+                color = ORANGE
+            elif tile.integrity == 0:
+                color = BLACK
+            elif tile.__class__ == Population:
+                color = RED
+            elif tile.__class__ == Forest:
+                color = GREEN
+            elif tile.__class__ == Road:
+                color = LIGHTGREY
+            else:
+                color = BLUE
+            tile.image.fill(color)
 
 # draw things
 

@@ -1,9 +1,8 @@
 import random
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Dict
-from util import Point
-from tile import Tile
+from typing import List
+from tile import *
 
 
 class Direction(Enum):
@@ -35,13 +34,27 @@ class Wildfire:
 
 # TODO updates fire tiles expandable and intensity
 def update_wildfire(wild: Wildfire) -> None:
-    pass
+    for tile in wild.tiles:
+        decreased = tile.integrity - tile.fire_intensity
+        tile.integrity = (MIN_INTEGRITY, decreased)[decreased > MIN_INTEGRITY]
+
+        if tile.integrity == 0:
+            decreased = tile.fire_intensity - DECAY
+            tile.fire_intensity = (MIN_FIRE, decreased)[decreased > MIN_FIRE]
+        elif decreased > 0 and tile.fire_intensity < MAX_FIRE:
+            tile.fire_intensity += 1
+
+        if tile.fire_intensity == 0:
+            tile.on_fire = False
+    wild.tiles = [tile for tile in wild.tiles if tile.on_fire]
 
 
 def expand_wildfire(wild: Wildfire, tile_dict: dict, wind: Wind) -> None:
     wild.start_time += 1
     direct = [Direction.North, Direction.South, Direction.East, Direction.West] \
              + (wind.strength - 1) * [wind.direction]
+    types = [Population, Forest, Road]
+    new_tiles = []
 
     for tile in wild.tiles:
         if random.randint(1, 10) <= tile.fire_intensity:
@@ -62,7 +75,13 @@ def expand_wildfire(wild: Wildfire, tile_dict: dict, wind: Wind) -> None:
                 if tile.point.x == 0:
                     continue
                 new = tile_dict[Point(tile.point.x - 1, tile.point.y)]
-            if new.on_fire or new.integrity == 0:
+            if new.__class__ == Water or new.on_fire or new.integrity == 0:
                 continue
-            new.fire_intensity = tile.fire_intensity
-            wild.add_fire(new)
+            if new.__class__ not in random.choices(types, weights=[0.3, 0.6, 0.1], k=1):
+                continue
+            new.fire_intensity = 1
+            new.on_fire = True
+            new_tiles.append(new)
+
+    for fire in new_tiles:
+        wild.add_fire(fire)
