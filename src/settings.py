@@ -31,3 +31,13 @@ TILESIZE = 16
 DRONESIZE = 12
 WATERCAPACITY = 100
 BATTERY = 100
+
+# limits
+MIN_WIND = 1
+MAX_WIND = 10
+MIN_FIRE = 0
+MAX_FIRE = 10
+MIN_INTEGRITY = 0
+DECAY = 1
+
+# probability to tile type
