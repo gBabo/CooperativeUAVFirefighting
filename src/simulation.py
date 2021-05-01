@@ -3,6 +3,7 @@ from drone import *
 from map2 import *
 from weather import *
 from sector import *
+from button import *
 import time
 
 
@@ -27,6 +28,11 @@ class Simulation:
 
         self.sector_list: List[Sector] = []
 
+        self.step_button = None
+        self.step_next_button = None
+        self.step_pause = False
+        self.step = False
+
     def simulation_loop(self):
         while self.playing:
             self.check_events()
@@ -43,10 +49,14 @@ class Simulation:
             self.update()
             self.draw()
             self.reset_keys()
+            while self.step and self.step_pause and self.playing and self.running:
+                self.check_events()
+            self.step_pause = True
             time.sleep(1)
 
     def check_events(self):
         for event in pygame.event.get():
+            mouse_position = pygame.mouse.get_pos()
             if event.type == pygame.QUIT:
                 self.running, self.playing = False, False
             if event.type == pygame.KEYDOWN:
@@ -58,6 +68,12 @@ class Simulation:
                     self.DOWN_KEY = True
                 if event.key == pygame.K_UP:
                     self.UP_KEY = True
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if self.step_button.is_over(mouse_position):
+                    self.step = not self.step
+                    self.step_button.text = 'step:' + str(self.step)
+                elif self.step_next_button.is_over(mouse_position):
+                    self.step_pause = False
 
     def reset_keys(self):
         self.UP_KEY, self.DOWN_KEY, self.START_KEY, self.BACK_KEY = False, False, False, False
@@ -91,6 +107,7 @@ class Simulation:
         self.draw_tiles()
         self.draw_grid()
         self.draw_drones()
+        self.draw_buttons()
         pygame.display.flip()
 
     def draw_grid(self):
@@ -107,13 +124,18 @@ class Simulation:
     def draw_drones(self):
         self.drone_group.draw(self.screen)
 
-# inicitate and create things
+    def draw_buttons(self):
+        self.step_button.draw(self.screen)
+        self.step_next_button.draw(self.screen)
+
+# initiate and create things
 
     def initiate(self):
         self.create_tiles()
         self.crete_drones()
         self.create_sectors()
         self.create_wildfires()
+        self.create_buttons()
 
     def create_tiles(self):
         for y in range(0, 32, 1):
@@ -140,7 +162,7 @@ class Simulation:
         for y in range(0, 32//sector_size, 1):
             for x in range(0, 32//sector_size, 1):
                 #id, probability per fire, size
-                sector = Sector(sector_id, 4/64, sector_size)
+                sector = Sector(sector_id, 16/64, sector_size)
                 sector_id = sector_id + 1
                 sector.create_sector(x*sector_size, y*sector_size, self.tile_dict)
                 self.sector_list.append(sector)
@@ -154,3 +176,7 @@ class Simulation:
         wild = Wildfire(1, point, 1)
         wild.add_fire(fire)
         self.wildfire_list.append(wild)
+
+    def create_buttons(self):
+        self.step_button = button(LIGHTGREY, 40, 40, 50, 50, 'step:' + str(self.step))
+        self.step_next_button = button(LIGHTGREY, 120, 40, 50, 50, 'next step')
