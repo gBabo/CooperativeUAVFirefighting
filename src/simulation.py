@@ -24,16 +24,38 @@ class Simulation:
         self.wind = Wind(
             random.choice([Direction.North, Direction.South, Direction.East, Direction.West]),
             random.randint(1, 10))  # Static for testing
+        self.wind_dysplay = button(WHITE, 40, 120, 180, 30, "Wind direction: " + str(self.wind.direction))
         self.wildfire_list: List[Wildfire] = []
 
         self.sector_list: List[Sector] = []
 
+        # button and variable that indicates if sim is in step or continuose mode
         self.step_button = None
-        self.step_next_button = None
-        self.step_pause = False
         self.step = False
 
+        # button and variable that make sim do one step in step mode
+        self.step_next_button = None
+        self.step_pause = False
+
+        # button and var that inidcates to create reactive drones
+        self.reactive_drone_button = None
+        self.create_reactive_drone = False
+
+        # button and var that indicates to create hybrid drones
+        self.hydrid_drone_button = None
+        self.create_hybrid_drone = False
+
+        # button and var that inidcates to create hybrid coop drones
+        self.coop_drone_button = None
+        self.create_hybrid_coop_drone = False
+
+        self.drone_not_chosen = True
+
     def simulation_loop(self):
+        self.initial_draw()
+        while self.drone_not_chosen and self.playing and self.running:
+            self.check_events()
+        self.init_and_draw_drones()
         while self.playing:
             self.check_events()
             for agent in self.drone_list:
@@ -44,15 +66,15 @@ class Simulation:
 
             for sector in self.sector_list:
                 if sector.calculate_fire_alert(self.wildfire_list):
-                    print("FIRE! in sector "+str(sector.sectorID))
-            
+                    print("FIRE! in sector " + str(sector.sectorID))
             self.update()
             self.draw()
             self.reset_keys()
+            time.sleep(1)
             while self.step and self.step_pause and self.playing and self.running:
                 self.check_events()
             self.step_pause = True
-            time.sleep(1)
+
 
     def check_events(self):
         for event in pygame.event.get():
@@ -72,13 +94,28 @@ class Simulation:
                 if self.step_button.is_over(mouse_position):
                     self.step = not self.step
                     self.step_button.text = 'step:' + str(self.step)
-                elif self.step_next_button.is_over(mouse_position):
+                if self.step_next_button.is_over(mouse_position):
                     self.step_pause = False
+                if self.reactive_drone_button.is_over(mouse_position):
+                    self.create_reactive_drone = True
+                    self.create_hybrid_drone = False
+                    self.create_hybrid_coop_drone = False
+                    self.drone_not_chosen = False
+                if self.hydrid_drone_button.is_over(mouse_position):
+                    self.create_hybrid_drone = True
+                    self.create_reactive_drone = False
+                    self.create_hybrid_coop_drone = False
+                    self.drone_not_chosen = False
+                if self.coop_drone_button.is_over(mouse_position):
+                    self.create_hybrid_coop_drone = True
+                    self.create_reactive_drone = False
+                    self.create_hybrid_drone = False
+                    self.drone_not_chosen = False
 
     def reset_keys(self):
         self.UP_KEY, self.DOWN_KEY, self.START_KEY, self.BACK_KEY = False, False, False, False
 
-# update things
+    # update things
 
     def update(self):
         self.tile_group.update()
@@ -100,13 +137,20 @@ class Simulation:
                 color = BLUE
             tile.image.fill(color)
 
-# draw things
+    # draw things
 
     def draw(self):
         self.update_tiles()
         self.draw_tiles()
         self.draw_grid()
         self.draw_drones()
+        self.draw_buttons()
+        pygame.display.flip()
+
+    def initial_draw(self):
+        self.update_tiles()
+        self.draw_tiles()
+        self.draw_grid()
         self.draw_buttons()
         pygame.display.flip()
 
@@ -127,12 +171,15 @@ class Simulation:
     def draw_buttons(self):
         self.step_button.draw(self.screen)
         self.step_next_button.draw(self.screen)
+        self.reactive_drone_button.draw(self.screen)
+        self.hydrid_drone_button.draw(self.screen)
+        self.coop_drone_button.draw(self.screen)
+        self.wind_dysplay.draw(self.screen)
 
-# initiate and create things
+    # initiate and create things
 
     def initiate(self):
         self.create_tiles()
-        self.crete_drones()
         self.create_sectors()
         self.create_wildfires()
         self.create_buttons()
@@ -151,20 +198,30 @@ class Simulation:
                 self.tile_group.add(tile)
                 self.tile_dict[tile.point] = tile
 
-    def crete_drones(self):
+    def create_reactive_drones(self):
         drone = DroneReactive(self, 16, 16)
+        self.drone_group.add(drone)
+        self.drone_list.append(drone)
+
+    def create_hybrid_drones(self):
+        drone = DroneHybrid(self, 16, 16)
+        self.drone_group.add(drone)
+        self.drone_list.append(drone)
+
+    def create_coop_hybrid_drones(self):
+        drone = DroneHybridCoop(self, 16, 16)
         self.drone_group.add(drone)
         self.drone_list.append(drone)
 
     def create_sectors(self):
         sector_id = 1
         sector_size = 8
-        for y in range(0, 32//sector_size, 1):
-            for x in range(0, 32//sector_size, 1):
-                #id, probability per fire, size
-                sector = Sector(sector_id, 16/64, sector_size)
+        for y in range(0, 32 // sector_size, 1):
+            for x in range(0, 32 // sector_size, 1):
+                # id, probability per fire, size
+                sector = Sector(sector_id, 16 / 64, sector_size)
                 sector_id = sector_id + 1
-                sector.create_sector(x*sector_size, y*sector_size, self.tile_dict)
+                sector.create_sector(x * sector_size, y * sector_size, self.tile_dict)
                 self.sector_list.append(sector)
 
     def create_wildfires(self):
@@ -178,5 +235,20 @@ class Simulation:
         self.wildfire_list.append(wild)
 
     def create_buttons(self):
-        self.step_button = button(LIGHTGREY, 40, 40, 50, 50, 'step:' + str(self.step))
-        self.step_next_button = button(LIGHTGREY, 120, 40, 50, 50, 'next step')
+        self.step_button = button(WHITE, 40, 40, 180, 30, 'step:' + str(self.step))
+        self.step_next_button = button(WHITE, 40, 80, 180, 30, 'next step')
+        self.reactive_drone_button = button(WHITE, 250, 40, 160, 30, 'Start with reative drones')
+        self.hydrid_drone_button = button(WHITE, 425, 40, 160, 30, 'Start with hybrid drones')
+        self.coop_drone_button = button(WHITE, 600, 40, 160, 30, 'Start with hybrid coop drones')
+
+    def init_and_draw_drones(self):
+        if self.create_reactive_drone:
+            self.create_reactive_drones()
+
+        if self.create_hybrid_drone:
+            self.create_hybrid_drones()
+
+        if self.create_hybrid_coop_drone:
+            self.create_coop_hybrid_drones()
+
+        self.draw_drones()
