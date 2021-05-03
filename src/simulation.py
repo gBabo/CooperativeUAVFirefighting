@@ -239,7 +239,7 @@ class Simulation:
                 # id, probability per fire, size
                 sector = Sector(sector_id, 16 / 64, sector_size)
                 sector_id = sector_id + 1
-                sector.create_sector(x * sector_size, y * sector_size, self.tile_dict)
+                sector.create_sector(x * sector_size, y * sector_size)
                 self.sector_list.append(sector)
 
     def create_wildfires(self):
