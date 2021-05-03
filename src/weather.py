@@ -32,7 +32,6 @@ class Wildfire:
         return len(self.tiles) - 1
 
 
-# TODO updates fire tiles expandable and intensity
 def update_wildfire(wild: Wildfire) -> None:
     for tile in wild.tiles:
         decreased = tile.integrity - tile.fire_intensity

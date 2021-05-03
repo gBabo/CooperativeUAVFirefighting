@@ -1,4 +1,3 @@
-from tile import Population, Forest, Road, Water
 from drone import *
 from map2 import *
 from weather import *
@@ -74,7 +73,6 @@ class Simulation:
             while self.step and self.step_pause and self.playing and self.running:
                 self.check_events()
             self.step_pause = True
-
 
     def check_events(self):
         for event in pygame.event.get():
@@ -180,6 +178,7 @@ class Simulation:
 
     def initiate(self):
         self.create_tiles()
+        self.expand_priority()
         self.create_sectors()
         self.create_wildfires()
         self.create_buttons()
@@ -197,6 +196,25 @@ class Simulation:
                     tile = Water(self, x, y)
                 self.tile_group.add(tile)
                 self.tile_dict[tile.point] = tile
+
+    def expand_priority(self):
+        q = []
+
+        for tile in self.tile_dict.values():
+            if tile.priority == 10:
+                q.append(tile)
+
+        while len(q) != 0:
+            tile = q.pop()
+            priority = tile.priority - 1
+            for n in get_neighbours(tile, self.tile_dict):
+                if n.priority >= priority or n in q:
+                    continue
+                n.priority = priority
+                q.append(n)
+
+        """for tile in self.tile_dict.values():
+            print(tile)"""
 
     def create_reactive_drones(self):
         drone = DroneReactive(self, 16, 16)
