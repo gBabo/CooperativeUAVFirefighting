@@ -27,6 +27,7 @@ class Simulation:
         self.wildfire_list: List[Wildfire] = []
 
         self.sector_list: List[Sector] = []
+        self.population_list: List[Tile] = []
 
         # button and variable that indicates if sim is in step or continuous mode
         self.step_button = None
@@ -56,19 +57,25 @@ class Simulation:
             self.check_events()
         self.init_and_draw_drones()
         while self.playing:
+            if (self.check_end_conditions()):
+                self.playing = False
+                print("-----------Simulation END-----------")
+                break
+
             while self.step and self.step_pause and self.playing and self.running:
                 self.check_events()
-            self.step_pause = True
+            self.step_pause = False
             self.check_events()
             for agent in self.drone_list:
                 agent.agent_decision()
             for wild in self.wildfire_list:
                 update_wildfire(wild)
                 expand_wildfire(wild, self.tile_dict, self.wind)
-
-            '''for sector in self.sector_list:
+            
+            for sector in self.sector_list:
                 if sector.calculate_fire_alert(self.wildfire_list):
-                    print("FIRE! in sector " + str(sector.sectorID))'''
+                    print("FIRE! in sector " + str(sector.sectorID))
+            
             self.update()
             self.draw()
             self.reset_keys()
@@ -112,6 +119,24 @@ class Simulation:
 
     def reset_keys(self):
         self.UP_KEY, self.DOWN_KEY, self.START_KEY, self.BACK_KEY = False, False, False, False
+
+    def check_end_conditions(self):
+        for wildfire in self.wildfire_list:
+            if len(wildfire.tiles) == 0:
+                end = True
+            else: 
+                end = False
+
+        if end:
+            return end
+
+        for population_tile in self.population_list:
+            if population_tile.integrity == 0:
+                end = True
+            else:
+                end = False
+
+        return end
 
     # update things
 
@@ -196,6 +221,7 @@ class Simulation:
             for x in range(0, 32, 1):
                 if sim_map2[y][x][0] == "population":
                     tile = Population(self, x, y)
+                    self.population_list.append(tile)
                 elif sim_map2[y][x][0] == "road":
                     tile = Road(self, x, y)
                 elif sim_map2[y][x][0] == "forest":
@@ -251,8 +277,8 @@ class Simulation:
                 self.sector_list.append(sector)
 
     def create_wildfires(self):
-        point = Point(16, 16)
-        fire = self.tile_dict[Point(16, 16)]
+        point = Point(23, 18)
+        fire = self.tile_dict[point]
         fire.on_fire = True
         fire.image.fill(ORANGE)
         fire.fire_intensity = random.randint(1, 10)

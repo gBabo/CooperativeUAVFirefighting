@@ -25,7 +25,7 @@ class Sector:
                     totalFires += 1
                     finalProbability += self.probabilityPerFireTile
 
-        print("Sector ", str(self.sectorID), " is seeing ", totalFires," fire tiles.")
+        #print("Sector ", str(self.sectorID), " is seeing ", totalFires," fire tiles.")
 
         #random.random() return a number in interval [0,1[
         return random.random() < finalProbability
