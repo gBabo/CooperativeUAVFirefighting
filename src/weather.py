@@ -43,7 +43,7 @@ def update_wildfire(wild: Wildfire) -> None:
         elif decreased > 0 and tile.fire_intensity < MAX_FIRE:
             tile.fire_intensity += 1
 
-        if tile.fire_intensity == 0:
+        if tile.fire_intensity <= 0:
             tile.on_fire = False
     wild.tiles = [tile for tile in wild.tiles if tile.on_fire]
 
