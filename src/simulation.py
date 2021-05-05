@@ -28,7 +28,7 @@ class Simulation:
 
         self.sector_list: List[Sector] = []
 
-        # button and variable that indicates if sim is in step or continuose mode
+        # button and variable that indicates if sim is in step or continuous mode
         self.step_button = None
         self.step = False
 
@@ -44,7 +44,7 @@ class Simulation:
         self.hybrid_drone_button = None
         self.create_hybrid_drone = False
 
-        # button and var that inidcates to create hybrid coop drones
+        # button and var that indicates to create hybrid coop drones
         self.coop_drone_button = None
         self.create_hybrid_coop_drone = False
 
@@ -73,7 +73,6 @@ class Simulation:
             self.draw()
             self.reset_keys()
             time.sleep(1)
-
 
     def check_events(self):
         for event in pygame.event.get():
@@ -160,14 +159,14 @@ class Simulation:
                                  (x + GRID_MARGIN_X, GRID_H + GRID_MARGIN_Y))
             else:
                 pygame.draw.line(self.screen, WHITE, (x + GRID_MARGIN_X, GRID_MARGIN_Y),
-                                (x + GRID_MARGIN_X, GRID_H + GRID_MARGIN_Y))
+                                 (x + GRID_MARGIN_X, GRID_H + GRID_MARGIN_Y))
         for y in range(0, GRID_H + 1, TILESIZE):
             if y % 128 == 0:
                 pygame.draw.line(self.screen, PURPLE, (GRID_MARGIN_X, y + GRID_MARGIN_Y),
                                  (GRID_W + GRID_MARGIN_X, y + GRID_MARGIN_Y))
             else:
                 pygame.draw.line(self.screen, WHITE, (GRID_MARGIN_X, y + GRID_MARGIN_Y),
-                                (GRID_W + GRID_MARGIN_X, y + GRID_MARGIN_Y))
+                                 (GRID_W + GRID_MARGIN_X, y + GRID_MARGIN_Y))
 
     def draw_tiles(self):
         self.tile_group.draw(self.screen)
