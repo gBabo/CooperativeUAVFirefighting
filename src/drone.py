@@ -81,7 +81,7 @@ class Drone(pygame.sprite.Sprite, ABC):
 
         for i in range(y - 1, y + 2):
             for j in range(x - 1, x + 2):
-                if i < 0 or i > 63 or j < 0 or j > 63:
+                if i < 0 or i > 31 or j < 0 or j > 31:
                     continue
                 fov.append(Point(j, i))
         return fov
