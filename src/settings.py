@@ -44,3 +44,7 @@ MIN_INTEGRITY = 0
 DECAY = 1
 
 # probability to tile type
+
+# end conditions
+#                     pop + extra
+MAX_PRIORITY_BURNED = 360 + 100

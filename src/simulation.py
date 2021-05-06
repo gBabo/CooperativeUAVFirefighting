@@ -74,7 +74,8 @@ class Simulation:
             
             for sector in self.sector_list:
                 if sector.calculate_fire_alert(self.wildfire_list):
-                    print("FIRE! in sector " + str(sector.sectorID))
+                    filler = "filler"
+                    #print("FIRE! in sector " + str(sector.sectorID))
             
             self.update()
             self.draw()
@@ -121,20 +122,42 @@ class Simulation:
         self.UP_KEY, self.DOWN_KEY, self.START_KEY, self.BACK_KEY = False, False, False, False
 
     def check_end_conditions(self):
+        #All Drones Dead
+        if len(self.drone_list) == 0:
+            print("All Drones Died")
+            return True
+
+        #All Fires Dead, and calculate total priority burned
+        priority_value_burned = 0
         for wildfire in self.wildfire_list:
+            for tile_burned in wildfire.tiles_burned:
+                priority_value_burned += tile_burned.priority
             if len(wildfire.tiles) == 0:
                 end = True
             else: 
                 end = False
 
         if end:
-            return end
+            print("All Fires Out")
+            return True
 
+        #All Population tiles dead
         for population_tile in self.population_list:
             if population_tile.integrity == 0:
                 end = True
             else:
                 end = False
+
+        if end:
+            print("All Population Dead")
+            return True
+
+        #Too much priority burned
+        if priority_value_burned > MAX_PRIORITY_BURNED:
+            print("Too Much Priority Dead")
+            end = True
+        else: 
+            end = False
 
         return end
 

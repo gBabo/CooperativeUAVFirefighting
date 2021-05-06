@@ -24,6 +24,7 @@ class Wildfire:
     start_location: Point = field(compare=False)
     start_time: int = field(default=1, compare=False)
     tiles: List[Tile] = field(default_factory=list, compare=False)
+    tiles_burned: List[Tile] = field(default_factory=list, compare=False)
 
     def add_fire(self, tile: Tile):
         self.tiles.append(tile)
@@ -44,6 +45,7 @@ def update_wildfire(wild: Wildfire) -> None:
             tile.fire_intensity += 1
 
         if tile.fire_intensity <= 0:
+            wild.tiles_burned.append(tile)
             tile.on_fire = False
     wild.tiles = [tile for tile in wild.tiles if tile.on_fire]
 
