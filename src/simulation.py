@@ -58,8 +58,11 @@ class Simulation:
         self.init_and_draw_drones()
         while self.playing:
             if (self.check_end_conditions()):
-                self.playing = False
                 print("-----------Simulation END-----------")
+                self.calculate_metrics()
+
+                while self.playing and self.running:
+                    self.check_events()
                 break
 
             while self.step and self.step_pause and self.playing and self.running:
@@ -160,6 +163,11 @@ class Simulation:
             end = False
 
         return end
+
+    def calculate_metrics(self):
+        print("Number of Fires: ", len(self.wildfire_list)+"\n-----------------------")
+        for wildfire in self.wildfire_list:
+            print(wildfire)
 
     # update things
 

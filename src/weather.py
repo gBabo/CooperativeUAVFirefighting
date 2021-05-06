@@ -26,6 +26,9 @@ class Wildfire:
     tiles: List[Tile] = field(default_factory=list, compare=False)
     tiles_burned: List[Tile] = field(default_factory=list, compare=False)
 
+    def __str__(self):
+        return "Wildfire ID: "+str(self.wid)+"\nStart Location: "+str(self.start_location)+"\nTiles OnFire: "+str(len(self.tiles))+"\nTiles Burned: "+str(len(self.tiles_burned))
+
     def add_fire(self, tile: Tile):
         self.tiles.append(tile)
 
