@@ -56,7 +56,12 @@ class Simulation:
         while self.drone_not_chosen and self.playing and self.running:
             self.check_events()
         self.init_and_draw_drones()
+        time.sleep(1)
         while self.playing:
+            print(self.step, self.step_pause, self.playing, self.running)
+            while self.step and self.step_pause and self.playing and self.running:
+                self.check_events()
+            self.step_pause = True
             if (self.check_end_conditions()):
                 print("-----------Simulation END-----------")
                 self.calculate_metrics()
@@ -64,10 +69,6 @@ class Simulation:
                 while self.playing and self.running:
                     self.check_events()
                 break
-
-            while self.step and self.step_pause and self.playing and self.running:
-                self.check_events()
-            self.step_pause = False
             self.check_events()
             for agent in self.drone_list:
                 agent.agent_decision()
@@ -100,11 +101,6 @@ class Simulation:
                 if event.key == pygame.K_UP:
                     self.UP_KEY = True
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if self.step_button.is_over(mouse_position):
-                    self.step = not self.step
-                    self.step_button.text = 'step:' + str(self.step)
-                if self.step_next_button.is_over(mouse_position):
-                    self.step_pause = False
                 if self.reactive_drone_button.is_over(mouse_position):
                     self.create_reactive_drone = True
                     self.create_hybrid_drone = False
@@ -120,6 +116,14 @@ class Simulation:
                     self.create_reactive_drone = False
                     self.create_hybrid_drone = False
                     self.drone_not_chosen = False
+                if self.step_button.is_over(mouse_position):
+                    self.step = not self.step
+                    self.step_pause = not self.step_pause
+                    self.step_button.text = 'step:' + str(self.step)
+                    self.step_button.draw(self.screen)
+                    pygame.display.flip()
+                if self.step_next_button.is_over(mouse_position):
+                    self.step_pause = False
 
     def reset_keys(self):
         self.UP_KEY, self.DOWN_KEY, self.START_KEY, self.BACK_KEY = False, False, False, False
@@ -165,7 +169,7 @@ class Simulation:
         return end
 
     def calculate_metrics(self):
-        print("Number of Fires: ", len(self.wildfire_list)+"\n-----------------------")
+        print("Number of Fires: ", str(len(self.wildfire_list)) + '\n-----------------------')
         for wildfire in self.wildfire_list:
             print(wildfire)
 
@@ -282,7 +286,31 @@ class Simulation:
             print(tile)"""
 
     def create_reactive_drones(self):
+        drone = DroneReactive(self, 16, 16)
+        self.drone_group.add(drone)
+        self.drone_list.append(drone)
         drone = DroneReactive(self, 15, 16)
+        self.drone_group.add(drone)
+        self.drone_list.append(drone)
+        drone = DroneReactive(self, 17, 16)
+        self.drone_group.add(drone)
+        self.drone_list.append(drone)
+        drone = DroneReactive(self, 15, 17)
+        self.drone_group.add(drone)
+        self.drone_list.append(drone)
+        drone = DroneReactive(self, 16, 17)
+        self.drone_group.add(drone)
+        self.drone_list.append(drone)
+        drone = DroneReactive(self, 17, 17)
+        self.drone_group.add(drone)
+        self.drone_list.append(drone)
+        drone = DroneReactive(self, 15, 18)
+        self.drone_group.add(drone)
+        self.drone_list.append(drone)
+        drone = DroneReactive(self, 16, 18)
+        self.drone_group.add(drone)
+        self.drone_list.append(drone)
+        drone = DroneReactive(self, 17, 18)
         self.drone_group.add(drone)
         self.drone_list.append(drone)
 
@@ -335,3 +363,4 @@ class Simulation:
             self.create_coop_hybrid_drones()
 
         self.draw_drones()
+        pygame.display.flip()

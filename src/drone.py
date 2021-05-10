@@ -88,6 +88,10 @@ class Drone(pygame.sprite.Sprite, ABC):
 
     def put_out_fire(self) -> None:
         if self.water_capacity == 0:
+            self.spend_energy()
+            if self.battery <= 0:
+                self.simulation.drone_list.remove(self)
+                self.kill()
             return
 
         tile = self.simulation.tile_dict[self.point]
@@ -117,9 +121,7 @@ class DroneReactive(Drone):
         super().__init__(simulation, x, y)
 
     def agent_decision(self) -> None:
-        print(self.point)
-        print(self.needs_refuel())
-        if self.simulation.tile_dict[self.point].on_fire and not self.needs_refuel():
+        if self.simulation.tile_dict[self.point].on_fire and not self.water_capacity == 0:
             self.put_out_fire()
 
         elif self.simulation.tile_dict[self.point].__class__ == Population:
@@ -183,7 +185,7 @@ class DroneReactive(Drone):
         drones_around = self.see_drones_around()
 
         for point in self.fov:
-            if self.simulation.tile_dict[point].on_fire and not self.needs_refuel():
+            if self.simulation.tile_dict[point].on_fire and not self.water_capacity == 0:
                 points_of_interest[0].append(point)
                 continue
             if self.simulation.tile_dict[point].__class__ == Population and self.simulation.tile_dict[
@@ -227,7 +229,7 @@ class DroneReactive(Drone):
         return self.battery < 50
 
     def needs_refuel(self) -> bool:
-        return self.water_capacity < 20
+        return self.water_capacity <= 80
 
     def see_drones_around(self) -> list:
         list_of_drones_around = []
