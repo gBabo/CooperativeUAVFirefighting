@@ -1,3 +1,5 @@
+import random
+
 from drone import *
 from map2 import *
 from weather import *
@@ -109,16 +111,22 @@ class Simulation:
                     self.create_reactive_drone = False
                     self.create_hybrid_drone = False
                     self.drone_not_chosen = False
+                    if not self.wildfire_list:
+                        self.create_wildfires()
                 if self.reactive_drone_button.is_over(mouse_position):
                     self.create_reactive_drone = True
                     self.create_hybrid_drone = False
                     self.create_naive_drone = False
                     self.drone_not_chosen = False
+                    if not self.wildfire_list:
+                        self.create_wildfires()
                 if self.hybrid_drone_button.is_over(mouse_position):
                     self.create_hybrid_drone = True
                     self.create_reactive_drone = False
                     self.create_naive_drone = False
                     self.drone_not_chosen = False
+                    if not self.wildfire_list:
+                        self.create_wildfires()
                 if self.step_button.is_over(mouse_position):
                     self.step = not self.step
                     self.step_pause = not self.step_pause
@@ -128,7 +136,8 @@ class Simulation:
                 if self.step_next_button.is_over(mouse_position):
                     self.step_pause = False
                 if self.debug_button.is_over(mouse_position):
-                    self.debug_mode = not self.debug_button
+                    self.debug_mode = not self.debug_mode
+                    print(self.debug_button.text+f": {self.debug_mode}")
 
     def reset_keys(self):
         self.UP_KEY, self.DOWN_KEY, self.START_KEY, self.BACK_KEY = False, False, False, False
@@ -242,6 +251,7 @@ class Simulation:
     def draw_buttons(self):
         self.step_button.draw(self.screen)
         self.step_next_button.draw(self.screen)
+        self.debug_button.draw(self.screen)
         self.reactive_drone_button.draw(self.screen)
         self.hybrid_drone_button.draw(self.screen)
         self.naive_drone_button.draw(self.screen)
@@ -250,11 +260,10 @@ class Simulation:
     # initiate and create things
 
     def initiate(self):
+        self.create_buttons()
         self.create_tiles()
         self.expand_priority()
         self.create_sectors()
-        self.create_wildfires()
-        self.create_buttons()
 
     def create_tiles(self):
         for y in range(0, 32, 1):
@@ -355,19 +364,33 @@ class Simulation:
                 self.sector_list.append(sector)
 
     def create_wildfires(self):
-        point = Point(23, 18)
-        fire = self.tile_dict[point]
-        fire.on_fire = True
-        fire.image.fill(ORANGE)
-        fire.fire_intensity = random.randint(1, 10)
-        wild = Wildfire(1, point, 1)
-        wild.add_fire(fire)
-        self.wildfire_list.append(wild)
+        if self.debug_mode:
+            point = Point(23, 18)
+            fire = self.tile_dict[point]
+            fire.fire_intensity = 10
+            wild = Wildfire(1, point, 1)
+            fire.on_fire = True
+            fire.image.fill(ORANGE)
+            wild.add_fire(fire)
+            self.wildfire_list.append(wild)
+        else:
+            rng = random.randint(1, 3)
+            print(f"Wildfire count: {rng}")
+            for i in range(1, rng+1):
+                lst = [x for x in self.tile_dict.values() if x.__class__ == Forest and x.fire_intensity == 0]
+                point = random.choice(lst).point
+                fire = self.tile_dict[point]
+                fire.fire_intensity = 1
+                wild = Wildfire(i, point, 1)
+                fire.on_fire = True
+                fire.image.fill(ORANGE)
+                wild.add_fire(fire)
+                self.wildfire_list.append(wild)
 
     def create_buttons(self):
         self.step_button = button(WHITE, 40, 40, 180, 30, 'step:' + str(self.step))
         self.step_next_button = button(WHITE, 40, 80, 180, 30, 'next step')
-        self.debug_button = button(WHITE, 40, 120, 180, 30, 'Debug Mode')
+        self.debug_button = button(WHITE, 40, 160, 180, 30, 'Debug Mode')
 
         self.naive_drone_button = button(WHITE, 250, 40, 160, 30, 'Start with naive drones')
         self.reactive_drone_button = button(WHITE, 425, 40, 160, 30, 'Start with reactive drones')
