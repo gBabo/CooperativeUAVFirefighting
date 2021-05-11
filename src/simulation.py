@@ -49,6 +49,10 @@ class Simulation:
         self.naive_drone_button = None
         self.create_naive_drone = False
 
+        # button for debug mode
+        self.debug_button = None
+        self.debug_mode = False
+
         self.drone_not_chosen = True
 
     def simulation_loop(self):
@@ -123,6 +127,8 @@ class Simulation:
                     pygame.display.flip()
                 if self.step_next_button.is_over(mouse_position):
                     self.step_pause = False
+                if self.debug_button.is_over(mouse_position):
+                    self.debug_mode = not self.debug_button
 
     def reset_keys(self):
         self.UP_KEY, self.DOWN_KEY, self.START_KEY, self.BACK_KEY = False, False, False, False
@@ -288,47 +294,49 @@ class Simulation:
         drone = DroneNaive(self, 16, 16)
         self.drone_group.add(drone)
         self.drone_list.append(drone)
-        drone = DroneNaive(self, 17, 16)
-        self.drone_group.add(drone)
-        self.drone_list.append(drone)
-        drone = DroneNaive(self, 18, 16)
-        self.drone_group.add(drone)
-        self.drone_list.append(drone)
-        drone = DroneNaive(self, 16, 17)
-        self.drone_group.add(drone)
-        self.drone_list.append(drone)
-        drone = DroneNaive(self, 17, 17)
-        self.drone_group.add(drone)
-        self.drone_list.append(drone)
-        drone = DroneNaive(self, 18, 17)
-        self.drone_group.add(drone)
-        self.drone_list.append(drone)
+        if not self.debug_mode:
+            drone = DroneNaive(self, 17, 16)
+            self.drone_group.add(drone)
+            self.drone_list.append(drone)
+            drone = DroneNaive(self, 18, 16)
+            self.drone_group.add(drone)
+            self.drone_list.append(drone)
+            drone = DroneNaive(self, 16, 17)
+            self.drone_group.add(drone)
+            self.drone_list.append(drone)
+            drone = DroneNaive(self, 17, 17)
+            self.drone_group.add(drone)
+            self.drone_list.append(drone)
+            drone = DroneNaive(self, 18, 17)
+            self.drone_group.add(drone)
+            self.drone_list.append(drone)
 
     def create_reactive_drones(self):
         drone = DroneReactive(self, 16, 16)
         self.drone_group.add(drone)
         self.drone_list.append(drone)
-        drone = DroneReactive(self, 15, 16)
-        self.drone_group.add(drone)
-        self.drone_list.append(drone)
-        drone = DroneReactive(self, 17, 16)
-        self.drone_group.add(drone)
-        self.drone_list.append(drone)
-        drone = DroneReactive(self, 15, 17)
-        self.drone_group.add(drone)
-        self.drone_list.append(drone)
-        drone = DroneReactive(self, 16, 17)
-        self.drone_group.add(drone)
-        self.drone_list.append(drone)
-        drone = DroneReactive(self, 17, 17)
-        self.drone_group.add(drone)
-        self.drone_list.append(drone)
-        drone = DroneReactive(self, 15, 18)
-        self.drone_group.add(drone)
-        self.drone_list.append(drone)
-        drone = DroneReactive(self, 16, 18)
-        self.drone_group.add(drone)
-        self.drone_list.append(drone)
+        if not self.debug_mode:
+            drone = DroneReactive(self, 15, 16)
+            self.drone_group.add(drone)
+            self.drone_list.append(drone)
+            drone = DroneReactive(self, 17, 16)
+            self.drone_group.add(drone)
+            self.drone_list.append(drone)
+            drone = DroneReactive(self, 15, 17)
+            self.drone_group.add(drone)
+            self.drone_list.append(drone)
+            drone = DroneReactive(self, 16, 17)
+            self.drone_group.add(drone)
+            self.drone_list.append(drone)
+            drone = DroneReactive(self, 17, 17)
+            self.drone_group.add(drone)
+            self.drone_list.append(drone)
+            drone = DroneReactive(self, 15, 18)
+            self.drone_group.add(drone)
+            self.drone_list.append(drone)
+            drone = DroneReactive(self, 16, 18)
+            self.drone_group.add(drone)
+            self.drone_list.append(drone)
 
     def create_hybrid_drones(self):
         drone = DroneHybrid(self, 16, 16)
@@ -359,6 +367,8 @@ class Simulation:
     def create_buttons(self):
         self.step_button = button(WHITE, 40, 40, 180, 30, 'step:' + str(self.step))
         self.step_next_button = button(WHITE, 40, 80, 180, 30, 'next step')
+        self.debug_button = button(WHITE, 40, 120, 180, 30, 'Debug Mode')
+
         self.naive_drone_button = button(WHITE, 250, 40, 160, 30, 'Start with naive drones')
         self.reactive_drone_button = button(WHITE, 425, 40, 160, 30, 'Start with reactive drones')
         self.hybrid_drone_button = button(WHITE, 600, 40, 160, 30, 'Start with hybrid drones')
