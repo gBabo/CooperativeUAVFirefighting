@@ -46,8 +46,8 @@ class Simulation:
         self.create_hybrid_drone = False
 
         # button and var that indicates to create hybrid coop drones
-        self.coop_drone_button = None
-        self.create_hybrid_coop_drone = False
+        self.naive_drone_button = None
+        self.create_naive_drone = False
 
         self.drone_not_chosen = True
 
@@ -58,11 +58,10 @@ class Simulation:
         self.init_and_draw_drones()
         time.sleep(1)
         while self.playing:
-            print(self.step, self.step_pause, self.playing, self.running)
             while self.step and self.step_pause and self.playing and self.running:
                 self.check_events()
             self.step_pause = True
-            if (self.check_end_conditions()):
+            if self.check_end_conditions():
                 print("-----------Simulation END-----------")
                 self.calculate_metrics()
 
@@ -75,12 +74,12 @@ class Simulation:
             for wild in self.wildfire_list:
                 update_wildfire(wild)
                 expand_wildfire(wild, self.tile_dict, self.wind)
-            
+
             for sector in self.sector_list:
                 if sector.calculate_fire_alert(self.wildfire_list):
                     filler = "filler"
-                    #print("FIRE! in sector " + str(sector.sectorID))
-            
+                    # print("FIRE! in sector " + str(sector.sectorID))
+
             self.update()
             self.draw()
             self.reset_keys()
@@ -101,20 +100,20 @@ class Simulation:
                 if event.key == pygame.K_UP:
                     self.UP_KEY = True
             if event.type == pygame.MOUSEBUTTONDOWN:
+                if self.naive_drone_button.is_over(mouse_position):
+                    self.create_naive_drone = True
+                    self.create_reactive_drone = False
+                    self.create_hybrid_drone = False
+                    self.drone_not_chosen = False
                 if self.reactive_drone_button.is_over(mouse_position):
                     self.create_reactive_drone = True
                     self.create_hybrid_drone = False
-                    self.create_hybrid_coop_drone = False
+                    self.create_naive_drone = False
                     self.drone_not_chosen = False
                 if self.hybrid_drone_button.is_over(mouse_position):
                     self.create_hybrid_drone = True
                     self.create_reactive_drone = False
-                    self.create_hybrid_coop_drone = False
-                    self.drone_not_chosen = False
-                if self.coop_drone_button.is_over(mouse_position):
-                    self.create_hybrid_coop_drone = True
-                    self.create_reactive_drone = False
-                    self.create_hybrid_drone = False
+                    self.create_naive_drone = False
                     self.drone_not_chosen = False
                 if self.step_button.is_over(mouse_position):
                     self.step = not self.step
@@ -129,26 +128,26 @@ class Simulation:
         self.UP_KEY, self.DOWN_KEY, self.START_KEY, self.BACK_KEY = False, False, False, False
 
     def check_end_conditions(self):
-        #All Drones Dead
+        # All Drones Dead
         if len(self.drone_list) == 0:
             print("All Drones Died")
             return True
 
-        #All Fires Dead, and calculate total priority burned
+        # All Fires Dead, and calculate total priority burned
         priority_value_burned = 0
         for wildfire in self.wildfire_list:
             for tile_burned in wildfire.tiles_burned:
                 priority_value_burned += tile_burned.priority
             if len(wildfire.tiles) == 0:
                 end = True
-            else: 
+            else:
                 end = False
 
         if end:
             print("All Fires Out")
             return True
 
-        #All Population tiles dead
+        # All Population tiles dead
         for population_tile in self.population_list:
             if population_tile.integrity == 0:
                 end = True
@@ -159,11 +158,11 @@ class Simulation:
             print("All Population Dead")
             return True
 
-        #Too much priority burned
+        # Too much priority burned
         if priority_value_burned > MAX_PRIORITY_BURNED:
             print("Too Much Priority Dead")
             end = True
-        else: 
+        else:
             end = False
 
         return end
@@ -239,7 +238,7 @@ class Simulation:
         self.step_next_button.draw(self.screen)
         self.reactive_drone_button.draw(self.screen)
         self.hybrid_drone_button.draw(self.screen)
-        self.coop_drone_button.draw(self.screen)
+        self.naive_drone_button.draw(self.screen)
         self.wind_display.draw(self.screen)
 
     # initiate and create things
@@ -285,6 +284,26 @@ class Simulation:
         """for tile in self.tile_dict.values():
             print(tile)"""
 
+    def create_naive_drones(self):
+        drone = DroneNaive(self, 16, 16)
+        self.drone_group.add(drone)
+        self.drone_list.append(drone)
+        drone = DroneNaive(self, 17, 16)
+        self.drone_group.add(drone)
+        self.drone_list.append(drone)
+        drone = DroneNaive(self, 18, 16)
+        self.drone_group.add(drone)
+        self.drone_list.append(drone)
+        drone = DroneNaive(self, 16, 17)
+        self.drone_group.add(drone)
+        self.drone_list.append(drone)
+        drone = DroneNaive(self, 17, 17)
+        self.drone_group.add(drone)
+        self.drone_list.append(drone)
+        drone = DroneNaive(self, 18, 17)
+        self.drone_group.add(drone)
+        self.drone_list.append(drone)
+
     def create_reactive_drones(self):
         drone = DroneReactive(self, 16, 16)
         self.drone_group.add(drone)
@@ -310,17 +329,9 @@ class Simulation:
         drone = DroneReactive(self, 16, 18)
         self.drone_group.add(drone)
         self.drone_list.append(drone)
-        drone = DroneReactive(self, 17, 18)
-        self.drone_group.add(drone)
-        self.drone_list.append(drone)
 
     def create_hybrid_drones(self):
         drone = DroneHybrid(self, 16, 16)
-        self.drone_group.add(drone)
-        self.drone_list.append(drone)
-
-    def create_coop_hybrid_drones(self):
-        drone = DroneHybridCoop(self, 16, 16)
         self.drone_group.add(drone)
         self.drone_list.append(drone)
 
@@ -348,9 +359,9 @@ class Simulation:
     def create_buttons(self):
         self.step_button = button(WHITE, 40, 40, 180, 30, 'step:' + str(self.step))
         self.step_next_button = button(WHITE, 40, 80, 180, 30, 'next step')
-        self.reactive_drone_button = button(WHITE, 250, 40, 160, 30, 'Start with reactive drones')
-        self.hybrid_drone_button = button(WHITE, 425, 40, 160, 30, 'Start with hybrid drones')
-        self.coop_drone_button = button(WHITE, 600, 40, 160, 30, 'Start with hybrid coop drones')
+        self.naive_drone_button = button(WHITE, 250, 40, 160, 30, 'Start with naive drones')
+        self.reactive_drone_button = button(WHITE, 425, 40, 160, 30, 'Start with reactive drones')
+        self.hybrid_drone_button = button(WHITE, 600, 40, 160, 30, 'Start with hybrid drones')
 
     def init_and_draw_drones(self):
         if self.create_reactive_drone:
@@ -359,8 +370,8 @@ class Simulation:
         if self.create_hybrid_drone:
             self.create_hybrid_drones()
 
-        if self.create_hybrid_coop_drone:
-            self.create_coop_hybrid_drones()
+        if self.create_naive_drone:
+            self.create_naive_drones()
 
         self.draw_drones()
         pygame.display.flip()

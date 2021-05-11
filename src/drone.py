@@ -7,6 +7,7 @@ from abc import ABC, abstractmethod
 from util import Point
 from tile import Population
 from tile import Water
+from tile import Tile
 
 
 class Drone(pygame.sprite.Sprite, ABC):
@@ -23,11 +24,26 @@ class Drone(pygame.sprite.Sprite, ABC):
         self.water_capacity = BATTERY
         self.fov = self.calculate_fov()
 
-    def recharge(self) -> None:
-        self.battery = BATTERY
+    def recharge(self, tile: Tile) -> None:
+        if tile.__class__ == Population:
+            if tile.integrity >= 60:
+                self.battery = BATTERY
+            else:
+                return
+        else:
+            return
 
-    def refuel(self) -> None:
-        self.water_capacity = WATERCAPACITY
+    def refuel(self, tile: Tile) -> None:
+        if tile.__class__ == Population:
+            if tile.integrity >= 60:
+                self.water_capacity = WATERCAPACITY
+                return
+            else:
+                return
+        elif tile.__class__ == Water:
+            self.water_capacity = WATERCAPACITY
+        else:
+            return
 
     def release_water(self) -> None:
         self.water_capacity -= WATERRELEASED
@@ -37,34 +53,47 @@ class Drone(pygame.sprite.Sprite, ABC):
 
     def move(self, direction) -> None:
 
+        drone_points = []
+        for drone in self.simulation.drone_list:
+            drone_points.append(drone.point)
+
         if direction == 0:
             # protect border limit
             if self.point.x < 31:
                 # right
-                self.point = Point(self.point.x + 1, self.point.y)
-                self.rect.center = [int((self.point.x * TILESIZE) + TILE_MARGIN_X),
-                                    int((self.point.y * TILESIZE) + TILE_MARGIN_Y)]
+                point = Point(self.point.x + 1, self.point.y)
+                if point not in drone_points:
+                    self.point = point
+                    self.rect.center = [int((self.point.x * TILESIZE) + TILE_MARGIN_X),
+                                        int((self.point.y * TILESIZE) + TILE_MARGIN_Y)]
+
         if direction == 1:
             # protect border limit
             if self.point.x > 0:
                 # left
-                self.point = Point(self.point.x - 1, self.point.y)
-                self.rect.center = [int((self.point.x * TILESIZE) + TILE_MARGIN_X),
-                                    int((self.point.y * TILESIZE) + TILE_MARGIN_Y)]
+                point = Point(self.point.x - 1, self.point.y)
+                if point not in drone_points:
+                    self.point = point
+                    self.rect.center = [int((self.point.x * TILESIZE) + TILE_MARGIN_X),
+                                        int((self.point.y * TILESIZE) + TILE_MARGIN_Y)]
         if direction == 2:
             # protect border limit
             if self.point.y < 31:
                 # down
-                self.point = Point(self.point.x, self.point.y + 1)
-                self.rect.center = [int((self.point.x * TILESIZE) + TILE_MARGIN_X),
-                                    int((self.point.y * TILESIZE) + TILE_MARGIN_Y)]
+                point = Point(self.point.x, self.point.y + 1)
+                if point not in drone_points:
+                    self.point = point
+                    self.rect.center = [int((self.point.x * TILESIZE) + TILE_MARGIN_X),
+                                        int((self.point.y * TILESIZE) + TILE_MARGIN_Y)]
         if direction == 3:
             # protect border limit
             if self.point.y > 0:
                 # up
-                self.point = Point(self.point.x, self.point.y - 1)
-                self.rect.center = [int((self.point.x * TILESIZE) + TILE_MARGIN_X),
-                                    int((self.point.y * TILESIZE) + TILE_MARGIN_Y)]
+                point = Point(self.point.x, self.point.y - 1)
+                if point not in drone_points:
+                    self.point = point
+                    self.rect.center = [int((self.point.x * TILESIZE) + TILE_MARGIN_X),
+                                        int((self.point.y * TILESIZE) + TILE_MARGIN_Y)]
 
         self.spend_energy()
         if self.battery <= 0:
@@ -116,6 +145,32 @@ class Drone(pygame.sprite.Sprite, ABC):
         pass
 
 
+class DroneNaive(Drone):
+    def __init__(self, simulation, x, y):
+        super().__init__(simulation, x, y)
+        self.position = sim_map2
+
+    def agent_decision(self):
+        if self.simulation.tile_dict[self.point].on_fire and self.water_capacity > 0:
+            self.put_out_fire()
+
+        elif self.simulation.tile_dict[self.point].__class__ == Population and (
+                self.needs_recharge() or self.needs_refuel()):
+            self.refuel(self.simulation.tile_dict[self.point])
+            self.recharge(self.simulation.tile_dict[self.point])
+
+        elif self.simulation.tile_dict[self.point].__class__ == Water and self.needs_refuel():
+            self.refuel(self.simulation.tile_dict[self.point])
+        else:
+            self.move(random.randint(0, 3))
+
+    def needs_refuel(self):
+        return self.water_capacity <= 80
+
+    def needs_recharge(self):
+        return self.battery < 90
+
+
 class DroneReactive(Drone):
     def __init__(self, simulation, x, y):
         super().__init__(simulation, x, y)
@@ -126,14 +181,14 @@ class DroneReactive(Drone):
 
         elif self.simulation.tile_dict[self.point].__class__ == Population:
             if (self.needs_recharge() or self.needs_refuel()) and self.simulation.tile_dict[self.point].integrity > 60:
-                self.recharge()
-                self.refuel()
+                self.recharge(self.simulation.tile_dict[self.point])
+                self.refuel(self.simulation.tile_dict[self.point])
             else:
                 self.target_moving()
 
         elif self.simulation.tile_dict[self.point].__class__ == Water:
             if self.needs_refuel():
-                self.refuel()
+                self.refuel(self.simulation.tile_dict[self.point])
             else:
                 self.target_moving()
         else:
@@ -193,7 +248,7 @@ class DroneReactive(Drone):
                 points_of_interest[1].append(point)
                 continue
             if ((self.simulation.tile_dict[point].__class__ == Population and self.simulation.tile_dict[
-                    point].integrity > 60) or self.simulation.tile_dict[point].__class__ == Water)\
+                point].integrity > 60) or self.simulation.tile_dict[point].__class__ == Water) \
                     and self.needs_refuel():
                 points_of_interest[2].append(point)
                 continue
@@ -240,21 +295,6 @@ class DroneReactive(Drone):
 
 
 class DroneHybrid(Drone):
-    def __init__(self, simulation, x, y):
-        super().__init__(simulation, x, y)
-        self.position = sim_map2
-
-    def agent_decision(self):
-        pass
-
-    def needs_refuel(self):
-        pass
-
-    def needs_recharge(self):
-        pass
-
-
-class DroneHybridCoop(Drone):
     def __init__(self, simulation, x, y):
         super().__init__(simulation, x, y)
         self.position = sim_map2
