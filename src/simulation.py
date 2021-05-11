@@ -62,7 +62,7 @@ class Simulation:
                 self.check_events()
             self.step_pause = True
             if self.check_end_conditions():
-                print("-----------Simulation END-----------")
+                print("------------Simulation END------------")
                 self.calculate_metrics()
 
                 while self.playing and self.running:
@@ -133,11 +133,11 @@ class Simulation:
             print("All Drones Died")
             return True
 
-        # All Fires Dead, and calculate total priority burned
+        # All Fires Dead and Calculate Total Priority Burned
         priority_value_burned = 0
         for wildfire in self.wildfire_list:
-            for tile_burned in wildfire.tiles_burned:
-                priority_value_burned += tile_burned.priority
+            priority_value_burned += wildfire.tile_on_fire_priority()
+            priority_value_burned += wildfire.tile_burned_priority()
             if len(wildfire.tiles) == 0:
                 end = True
             else:
@@ -158,7 +158,7 @@ class Simulation:
             print("All Population Dead")
             return True
 
-        # Too much priority burned
+        # Too Much Priority Burned
         if priority_value_burned > MAX_PRIORITY_BURNED:
             print("Too Much Priority Dead")
             end = True
@@ -168,9 +168,24 @@ class Simulation:
         return end
 
     def calculate_metrics(self):
-        print("Number of Fires: ", str(len(self.wildfire_list)) + '\n-----------------------')
+        print("Number of Fires:",len(self.wildfire_list))
+        total_distance = total_priority_burned = n_tiles = 0
         for wildfire in self.wildfire_list:
-            print(wildfire)
+            print("-----------------------",wildfire)
+            #priority
+            priority_burned = wildfire.tile_on_fire_priority() + wildfire.tile_burned_priority()
+            total_priority_burned += priority_burned
+            print("Priority On Fire and Burned:", priority_burned)
+            #spread
+            distance = wildfire.max_fire_spread_distance()
+            total_distance += distance
+            n_tiles += len(wildfire.tiles)+len(wildfire.tiles_burned)
+            print("Max Fire Spread Distance:", distance)
+            
+        print("--------------------------------------\nTotal Priority On Fire and Burned:", total_priority_burned)
+        print("Average Tile Priority On Fire and Burned:", total_priority_burned/n_tiles)
+        print("Average Max Fire Spread Distance:", total_distance/len(self.wildfire_list))
+        
 
     # update things
 
@@ -347,12 +362,21 @@ class Simulation:
                 self.sector_list.append(sector)
 
     def create_wildfires(self):
-        point = Point(23, 18)
+        point = Point(23, 19)
         fire = self.tile_dict[point]
         fire.on_fire = True
         fire.image.fill(ORANGE)
         fire.fire_intensity = random.randint(1, 10)
         wild = Wildfire(1, point, 1)
+        wild.add_fire(fire)
+        self.wildfire_list.append(wild)
+
+        point = Point(2, 3)
+        fire = self.tile_dict[point]
+        fire.on_fire = True
+        fire.image.fill(ORANGE)
+        fire.fire_intensity = random.randint(1, 10)
+        wild = Wildfire(2, point, 1)
         wild.add_fire(fire)
         self.wildfire_list.append(wild)
 

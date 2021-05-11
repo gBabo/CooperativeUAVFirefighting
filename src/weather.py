@@ -35,6 +35,28 @@ class Wildfire:
     def fire_spread(self):
         return len(self.tiles) - 1
 
+    def max_fire_spread_distance(self):
+        max_distance = 0
+        for tile in self.tiles:
+            distance = self.start_location.distanceTo(tile.point)
+            max_distance = (max_distance, distance)[max_distance < distance]
+        for tile in self.tiles_burned:
+            distance = self.start_location.distanceTo(tile.point)
+            max_distance = (max_distance, distance)[max_distance < distance]
+        return max_distance
+    
+    def tile_burned_priority(self):
+        priority_value_burned = 0
+        for tile_burned in self.tiles_burned:
+            priority_value_burned += tile_burned.priority
+        return priority_value_burned
+
+    def tile_on_fire_priority(self):
+        priority_value_on_fire = 0
+        for tile_on_fire in self.tiles:
+            priority_value_on_fire += tile_on_fire.priority
+        return priority_value_on_fire
+
 
 def update_wildfire(wild: Wildfire) -> None:
     for tile in wild.tiles:
