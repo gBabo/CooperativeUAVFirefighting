@@ -23,6 +23,7 @@ class Wildfire:
     wid: int
     start_location: Point = field(compare=False)
     start_time: int = field(default=1, compare=False)
+    points: List[Point] = field(default_factory=list, compare=False)
     tiles: List[Tile] = field(default_factory=list, compare=False)
     tiles_burned: List[Tile] = field(default_factory=list, compare=False)
 
@@ -30,18 +31,17 @@ class Wildfire:
         return "Wildfire ID: "+str(self.wid)+"\nStart Location: "+str(self.start_location)+"\nTiles OnFire: "+str(len(self.tiles))+"\nTiles Burned: "+str(len(self.tiles_burned))
 
     def add_fire(self, tile: Tile):
-        self.tiles.append(tile)
+        if tile.point not in self.points:
+            self.points.append(tile.point)
+            self.tiles.append(tile)
 
     def fire_spread(self):
         return len(self.tiles) - 1
 
     def max_fire_spread_distance(self):
-        max_distance = 0
-        for tile in self.tiles:
-            distance = self.start_location.distanceTo(tile.point)
-            max_distance = (max_distance, distance)[max_distance < distance]
-        for tile in self.tiles_burned:
-            distance = self.start_location.distanceTo(tile.point)
+        max_distance = 1
+        for point in self.points:
+            distance = self.start_location.distanceTo(point) + 1
             max_distance = (max_distance, distance)[max_distance < distance]
         return max_distance
     

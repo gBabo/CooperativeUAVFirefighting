@@ -25,7 +25,7 @@ class Simulation:
         self.wind = Wind(
             random.choice([Direction.North, Direction.South, Direction.East, Direction.West]),
             random.randint(1, 10))  # Static for testing
-        self.wind_display = button(WHITE, 40, 120, 180, 30, "Wind direction: " + str(self.wind.direction))
+        self.wind_display = Button(WHITE, 40, 120, 180, 30, "Wind direction: " + str(self.wind.direction))
         self.wildfire_list: List[Wildfire] = []
 
         self.sector_list: List[Sector] = []
@@ -137,7 +137,7 @@ class Simulation:
                     self.step_pause = False
                 if self.debug_button.is_over(mouse_position):
                     self.debug_mode = not self.debug_mode
-                    print(self.debug_button.text+f": {self.debug_mode}")
+                    print(self.debug_button.text + f": {self.debug_mode}")
 
     def reset_keys(self):
         self.UP_KEY, self.DOWN_KEY, self.START_KEY, self.BACK_KEY = False, False, False, False
@@ -183,24 +183,23 @@ class Simulation:
         return end
 
     def calculate_metrics(self):
-        print("Number of Fires:",len(self.wildfire_list))
+        print("Number of Fires:", len(self.wildfire_list))
         total_distance = total_priority_burned = n_tiles = 0
         for wildfire in self.wildfire_list:
-            print("-----------------------",wildfire)
-            #priority
+            print("-----------------------", wildfire)
+            # priority
             priority_burned = wildfire.tile_on_fire_priority() + wildfire.tile_burned_priority()
             total_priority_burned += priority_burned
             print("Priority On Fire and Burned:", priority_burned)
-            #spread
+            # spread
             distance = wildfire.max_fire_spread_distance()
             total_distance += distance
-            n_tiles += len(wildfire.tiles)+len(wildfire.tiles_burned)
+            n_tiles += len(wildfire.tiles) + len(wildfire.tiles_burned)
             print("Max Fire Spread Distance:", distance)
-            
+
         print("--------------------------------------\nTotal Priority On Fire and Burned:", total_priority_burned)
-        print("Average Tile Priority On Fire and Burned:", total_priority_burned/n_tiles)
-        print("Average Max Fire Spread Distance:", total_distance/len(self.wildfire_list))
-        
+        print("Average Tile Priority On Fire and Burned:", total_priority_burned / n_tiles)
+        print("Average Max Fire Spread Distance:", total_distance / len(self.wildfire_list))
 
     # update things
 
@@ -210,11 +209,7 @@ class Simulation:
 
     def update_tiles(self):
         for tile in self.tile_dict.values():
-            if tile.on_fire:
-                color = ORANGE
-            elif tile.integrity == 0:
-                color = BLACK
-            elif tile.__class__ == Population:
+            if tile.__class__ == Population:
                 color = RED
             elif tile.__class__ == Forest:
                 color = GREEN
@@ -223,6 +218,12 @@ class Simulation:
             else:
                 color = BLUE
             tile.image.fill(color)
+
+            if tile.on_fire:
+                fire = pygame.Surface((TILESIZE/2, TILESIZE/2))
+                color = (ORANGE, BLACK)[tile.integrity == 0]
+                fire.fill(color)
+                tile.image.blit(fire, [TILESIZE/4, TILESIZE/4])
 
     # draw things
 
@@ -385,31 +386,29 @@ class Simulation:
             fire.fire_intensity = 10
             wild = Wildfire(1, point, 1)
             fire.on_fire = True
-            fire.image.fill(ORANGE)
             wild.add_fire(fire)
             self.wildfire_list.append(wild)
         else:
             rng = random.randint(1, 3)
             print(f"Wildfire count: {rng}")
-            for i in range(1, rng+1):
+            for i in range(1, rng + 1):
                 lst = [x for x in self.tile_dict.values() if x.__class__ == Forest and x.fire_intensity == 0]
                 point = random.choice(lst).point
                 fire = self.tile_dict[point]
                 fire.fire_intensity = 1
                 wild = Wildfire(i, point, 1)
                 fire.on_fire = True
-                fire.image.fill(ORANGE)
                 wild.add_fire(fire)
                 self.wildfire_list.append(wild)
 
     def create_buttons(self):
-        self.step_button = button(WHITE, 40, 40, 180, 30, 'step:' + str(self.step))
-        self.step_next_button = button(WHITE, 40, 80, 180, 30, 'next step')
-        self.debug_button = button(WHITE, 40, 160, 180, 30, 'Debug Mode')
+        self.step_button = Button(WHITE, 40, 40, 180, 30, 'step:' + str(self.step))
+        self.step_next_button = Button(WHITE, 40, 80, 180, 30, 'next step')
+        self.debug_button = Button(WHITE, 40, 160, 180, 30, 'Debug Mode')
 
-        self.naive_drone_button = button(WHITE, 250, 40, 160, 30, 'Start with naive drones')
-        self.reactive_drone_button = button(WHITE, 425, 40, 160, 30, 'Start with reactive drones')
-        self.hybrid_drone_button = button(WHITE, 600, 40, 160, 30, 'Start with hybrid drones')
+        self.naive_drone_button = Button(WHITE, 250, 40, 160, 30, 'Start with naive drones')
+        self.reactive_drone_button = Button(WHITE, 425, 40, 160, 30, 'Start with reactive drones')
+        self.hybrid_drone_button = Button(WHITE, 600, 40, 160, 30, 'Start with hybrid drones')
 
     def init_and_draw_drones(self):
         if self.create_reactive_drone:
