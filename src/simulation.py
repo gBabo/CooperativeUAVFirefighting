@@ -31,6 +31,8 @@ class Simulation:
         self.sector_list: List[Sector] = []
         self.population_list: List[Tile] = []
 
+        self.fire_image = pygame.Surface((TILESIZE/2, TILESIZE/2))
+
         # button and variable that indicates if sim is in step or continuous mode
         self.step_button = None
         self.step = False
@@ -219,11 +221,10 @@ class Simulation:
                 color = BLUE
             tile.image.fill(color)
 
-            if tile.on_fire:
-                fire = pygame.Surface((TILESIZE/2, TILESIZE/2))
+            if tile.on_fire or tile.integrity == 0:
                 color = (ORANGE, BLACK)[tile.integrity == 0]
-                fire.fill(color)
-                tile.image.blit(fire, [TILESIZE/4, TILESIZE/4])
+                self.fire_image.fill(color)
+                tile.image.blit(self.fire_image, [TILESIZE/4, TILESIZE/4])
 
     # draw things
 
