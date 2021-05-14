@@ -56,10 +56,10 @@ class DroneHybrid(Drone):
     def rebuild_plan(self):
         pass
 
-    def is_plan_sound(self):
+    def is_plan_sound(self, action: Action):
         pass
 
-    def execute(self, action):
+    def execute(self, action: Action):
         pass
 
     def needs_refuel(self):
