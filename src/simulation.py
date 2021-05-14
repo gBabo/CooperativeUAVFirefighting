@@ -1,7 +1,6 @@
-import random
-
 from drone import *
 from map2 import *
+from hybrid import DroneHybrid
 from weather import *
 from sector import *
 from button import *
