@@ -18,7 +18,7 @@ class Wind:
     strength: int = 10  # Max Intensity
 
 
-@dataclass(order=True, repr=True)
+@dataclass(order=True)
 class Wildfire:
     wid: int
     start_location: Point = field(compare=False)
@@ -28,7 +28,11 @@ class Wildfire:
     tiles_burned: List[Tile] = field(default_factory=list, compare=False)
 
     def __str__(self):
-        return "Wildfire ID: "+str(self.wid)+"\nStart Location: "+str(self.start_location)+"\nTiles OnFire: "+str(len(self.tiles))+"\nTiles Burned: "+str(len(self.tiles_burned))
+        return "Wildfire ID: " + str(self.wid) \
+               + "\nStart Location: " + str(self.start_location) \
+               + "\nPoints:" + str(len(self.points)) \
+               + "\nTiles OnFire: " + str(len(self.tiles)) \
+               + "\nTiles Burned: " + str(len(self.tiles_burned))
 
     def add_fire(self, tile: Tile):
         if tile.point not in self.points:
@@ -44,7 +48,7 @@ class Wildfire:
             distance = self.start_location.distanceTo(point) + 1
             max_distance = (max_distance, distance)[max_distance < distance]
         return max_distance
-    
+
     def tile_burned_priority(self):
         priority_value_burned = 0
         for tile_burned in self.tiles_burned:
