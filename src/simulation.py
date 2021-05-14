@@ -151,12 +151,11 @@ class Simulation:
 
         # All Fires Dead and Calculate Total Priority Burned
         priority_value_burned = 0
+        end = True
         for wildfire in self.wildfire_list:
             priority_value_burned += wildfire.tile_on_fire_priority()
             priority_value_burned += wildfire.tile_burned_priority()
-            if len(wildfire.tiles) == 0:
-                end = True
-            else:
+            if len(wildfire.tiles) != 0:
                 end = False
 
         if end:
