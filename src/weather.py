@@ -1,7 +1,6 @@
 import random
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import List
 from tile import *
 
 
@@ -82,7 +81,7 @@ def update_wildfire(wild: Wildfire) -> None:
 def expand_wildfire(wild: Wildfire, tile_dict: dict, wind: Wind) -> None:
     wild.start_time += 1
     direct = [Direction.North, Direction.South, Direction.East, Direction.West] \
-             + (wind.strength - 1) * [wind.direction]
+            + (wind.strength - 1) * [wind.direction]
     types = [Population, Forest, Road]
     new_tiles = []
 

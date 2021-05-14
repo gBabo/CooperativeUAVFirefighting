@@ -30,6 +30,9 @@ class Simulation:
         self.sector_list: List[Sector] = []
         self.population_list: List[Tile] = []
 
+        self.hybrid_drone_sectors_on_fire: List[int] = []
+        self.hybrid_drone_points_on_fire: List[Point] = []
+
         self.fire_image = pygame.Surface((TILESIZE/2, TILESIZE/2))
 
         # button and variable that indicates if sim is in step or continuous mode

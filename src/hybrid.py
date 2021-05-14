@@ -1,5 +1,7 @@
 from enum import Enum
 from drone import Drone
+from settings import *
+from util import *
 from tile import Population, Water
 
 
@@ -15,7 +17,10 @@ class Action(Enum):
     Recharge = 1
     Refuel = 2
     Release_Water = 3
-    Move = 4
+    Move_North = 4
+    Move_South = 5
+    Move_East = 6
+    Move_West = 7
 
 
 class DroneHybrid(Drone):
@@ -25,6 +30,7 @@ class DroneHybrid(Drone):
         self.intention = {}
         self.sectors_on_fire = []
         self.plan_queue = []
+        self.target_sector = None
 
     def agent_decision(self) -> None:
         self.update_beliefs()
@@ -40,17 +46,27 @@ class DroneHybrid(Drone):
             self.build_plan()
 
     def update_beliefs(self):
-        pass
+        if self.map[self.point].on_fire:
+            if self.point not in self.simulation.hybrid_drone_points_on_fire:
+                self.simulation.hybrid_drone_points_on_fire.append(self.point)
+
+        if self.target_sector not in self.simulation.hybrid_drone_sectors_on_fire:
+            self.target_sector = None
 
     def deliberate(self):
         desires = []
 
         # Generate Options
-        if self.needs_refuel(): desires.append(Desire.Refuel)
-        if self.needs_recharge(): desires.append(Desire.Recharge)
-        if self.sector_on_fire(): desires.append(Desire.Move_to_Sector)
-        if self.can_release_water(): desires.append(Desire.Release_Water)
-        if not desires: desires.append(Desire.Find_Fire)
+        if self.needs_refuel():
+            desires.append(Desire.Refuel)
+        if self.needs_recharge():
+            desires.append(Desire.Recharge)
+        if self.sector_on_fire():
+            desires.append(Desire.Move_to_Sector)
+        if self.can_release_water():
+            desires.append(Desire.Release_Water)
+        if not desires:
+            desires.append(Desire.Find_Fire)
 
         # Filtering Options
         if Desire.Recharge in desires:
@@ -80,7 +96,17 @@ class DroneHybrid(Drone):
         pass
 
     def intention_success(self):
-        pass
+        if self.intention.keys() == Desire.Release_Water:
+            return True
+        elif self.intention.keys() == Desire.Recharge:
+            return self.battery == BATTERY
+        elif self.intention.keys() == Desire.Refuel:
+            return self.water_capacity == WATERCAPACITY
+        elif self.intention.keys() == Desire.Move_to_Sector:
+            return self.point in self.simulation.sector_list[self.target_sector]
+        else:
+            # find fire
+            return self.map[self.point].on_fire
 
     def build_plan(self):
         pass
@@ -89,21 +115,61 @@ class DroneHybrid(Drone):
         pass
 
     def is_plan_sound(self, action: Action):
-        pass
+        if action == Action.Drop_Water:
+            return self.map[self.point].on_fire
+        elif action == Action.Recharge:
+            return self.map[self.point].__class__ == Population and self.needs_recharge()
+        elif action == Action.Refuel:
+            return (self.map[self.point].__class__ == Population or self.map[self.point].__class__ == Water) and self.needs_refuel()
+        elif action == Action.Move_North:
+            return Point(self.point.x, self.point.y + 1) not in self.drone_positions_list()
+        elif action == Action.Move_South:
+            return Point(self.point.x, self.point.y - 1) not in self.drone_positions_list()
+        elif action == Action.Move_East:
+            return Point(self.point.x - 1, self.point.y) not in self.drone_positions_list()
+        else:
+            # move West
+            return Point(self.point.x + 1, self.point.y) not in self.drone_positions_list()
 
     # plan execution
     def execute(self, action: Action):
-        pass
+        if action == Action.Drop_Water:
+            self.put_out_fire()
+        elif action == Action.Recharge:
+            self.recharge(self.simulation.tile_dict[self.point])
+        elif action == Action.Refuel:
+            self.refuel(self.simulation.tile_dict[self.point])
+        elif action == Action.Move_North:
+            self.move(3)
+        elif action == Action.Move_South:
+            self.move(2)
+        elif action == Action.Move_East:
+            self.move(1)
+        else:
+            # move West
+            self.move(0)
 
     # check desires
     def needs_refuel(self):
-        pass
+        return self.water_capacity == 0
 
     def needs_recharge(self):
-        pass
+        closest_recharge_point = self.point.closest_point_from_list([tile for tile in self.map.values() if tile.__class__ == Population])
+        return number_of_steps_from_x_to_y(self.point, closest_recharge_point)* MOVEBATTERYCOST >= self.battery
 
     def sector_on_fire(self):
         pass
 
     def can_release_water(self):
         pass
+
+    def drone_positions_list(self) -> list:
+        drone_position_list = []
+        for drone in self.simulation.drone_list:
+            drone_position_list.append(drone.point)
+        return drone_position_list
+
+
+
+
+

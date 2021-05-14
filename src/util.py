@@ -18,3 +18,10 @@ class Point:
                                         self.distanceTo(point)]
 
         return point
+
+
+def number_of_steps_from_x_to_y(origine: Point, destiny: Point) -> int:
+    number_of_steps_x = destiny.x - origine.x if destiny.x - origine.x > 0 else -(destiny.x - origine.x)
+    number_of_steps_y = destiny.y - origine.y if destiny.y - origine.y > 0 else -(destiny.y - origine.y)
+
+    return number_of_steps_y + number_of_steps_x

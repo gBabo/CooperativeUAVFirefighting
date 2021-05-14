@@ -1,6 +1,5 @@
 import pygame
 from settings import *
-from map2 import *
 import math
 import random
 from abc import ABC, abstractmethod
