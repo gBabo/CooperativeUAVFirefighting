@@ -62,8 +62,13 @@ class DroneHybrid(Drone):
                 [tile for tile in self.map.values() if tile.__class__ in [Population, Water]]
             )}
         elif Desire.Move_to_Sector in desires:
+            sectors_tiles = []
+
+            for sec in self.sectors_on_fire:
+                sectors_tiles.append(sec.sectorTiles)
+
             self.intention = {Desire.Move_to_Sector: self.point.closest_point_from_list(
-                [tile for tile in self.sectors_on_fire]
+                [tile for tile in sectors_tiles]
             )}
         elif Desire.Release_Water in desires:
             self.intention = {Desire.Release_Water: self.point}
