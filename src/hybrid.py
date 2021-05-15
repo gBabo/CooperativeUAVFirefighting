@@ -105,7 +105,7 @@ class DroneHybrid(Drone):
             return self.point in self.simulation.sector_list[self.target_sector]
         else:
             # find fire
-            return self.map[self.point].on_fire
+            return [point for point in self.fov if self.map[point].on_fire]
 
     def build_plan(self):
         pass
