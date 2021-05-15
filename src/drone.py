@@ -3,7 +3,7 @@ from settings import *
 import math
 import random
 from abc import ABC, abstractmethod
-from util import Point
+from util import Point, random_direction
 from tile import Population
 from tile import Water
 from tile import Tile
@@ -52,31 +52,28 @@ class Drone(pygame.sprite.Sprite, ABC):
         self.battery -= MOVEBATTERYCOST
 
     def move(self, direction) -> None:
+        if direction == -1:
+            self.spend_energy()
+            self.is_dead()
+            self.fov = self.calculate_fov()
+            return
 
         drone_points = []
         for drone in self.simulation.drone_list:
             drone_points.append(drone.point)
 
         point = self.point
-        if direction == 0:
-            # protect border limit
+        if direction == Direction.West:
             if self.point.x < 31:
-                # right
                 point = Point(self.point.x + 1, self.point.y)
-        elif direction == 1:
-            # protect border limit
+        elif direction == Direction.East:
             if self.point.x > 0:
-                # left
                 point = Point(self.point.x - 1, self.point.y)
-        elif direction == 2:
-            # protect border limit
+        elif direction == Direction.South:
             if self.point.y < 31:
-                # down
                 point = Point(self.point.x, self.point.y + 1)
         else:
-            # protect border limit
             if self.point.y > 0:
-                # up
                 point = Point(self.point.x, self.point.y - 1)
 
         if point not in drone_points:
@@ -85,10 +82,7 @@ class Drone(pygame.sprite.Sprite, ABC):
                                 int((self.point.y * TILESIZE) + TILE_MARGIN_Y)]
 
         self.spend_energy()
-        if self.battery <= 0:
-            self.simulation.drone_list.remove(self)
-            self.kill()
-
+        self.is_dead()
         self.fov = self.calculate_fov()
         return
 
@@ -111,10 +105,13 @@ class Drone(pygame.sprite.Sprite, ABC):
             tile.fire_intensity -= 5
 
         self.spend_energy()
+        self.is_dead()
+        return
+
+    def is_dead(self):
         if self.battery <= 0:
             self.simulation.drone_list.remove(self)
             self.kill()
-        return
 
     @abstractmethod
     def agent_decision(self):
@@ -145,7 +142,7 @@ class DroneNaive(Drone):
         elif self.simulation.tile_dict[self.point].__class__ == Water and self.needs_refuel():
             self.refuel(self.simulation.tile_dict[self.point])
         else:
-            self.move(random.randint(0, 3))
+            self.move(random_direction())
 
     def needs_refuel(self):
         return self.water_capacity <= 80
@@ -184,80 +181,59 @@ class DroneReactive(Drone):
         def give_directions(ps: list) -> list:
             directions = []
             for p in ps:
+                if len(directions) == 4: break
                 if p.x > self.point.x:
-                    if 0 in directions:
-                        continue
-                    else:
-                        directions.append(0)
+                    if Direction.West not in directions:
+                        directions.append(Direction.West)
                 if p.x < self.point.x:
-                    if 1 in directions:
-                        continue
-                    else:
-                        directions.append(1)
+                    if Direction.East not in directions:
+                        directions.append(Direction.East)
                 if p.y > self.point.y:
-                    if 2 in directions:
-                        continue
-                    else:
-                        directions.append(2)
+                    if Direction.South not in directions:
+                        directions.append(Direction.South)
                 if p.y < self.point.y:
-                    if 3 in directions:
-                        continue
-                    else:
-                        directions.append(3)
+                    if Direction.North not in directions:
+                        directions.append(Direction.North)
             return directions
-
-        def remove_points(to_remove: list, where_to_remove: list) -> list:
-            if not to_remove or not where_to_remove:
-                return where_to_remove
-
-            for point_to_remove in to_remove:
-                if point_to_remove in where_to_remove:
-                    where_to_remove.remove(point_to_remove)
-
-            return where_to_remove
 
         # 0 -> fire/ 1-> battery/ 2 -> refuel
         points_of_interest = [[], [], []]
         direction_lists = [[], [], []]
-        all_directions = [0, 1, 2, 3]
+        all_directions = [Direction.West,
+                          Direction.East,
+                          Direction.South,
+                          Direction.North]
         drones_around = self.see_drones_around()
 
         for point in self.fov:
             if self.simulation.tile_dict[point].on_fire and not self.water_capacity == 0:
                 points_of_interest[0].append(point)
                 continue
-            if self.simulation.tile_dict[point].__class__ == Population and self.simulation.tile_dict[
-                    point].integrity > 60 and self.needs_recharge():
+            if self.simulation.tile_dict[point].__class__ == Population \
+                    and self.simulation.tile_dict[point].integrity > 60 \
+                    and self.needs_recharge():
                 points_of_interest[1].append(point)
                 continue
-            if ((self.simulation.tile_dict[point].__class__ == Population and self.simulation.tile_dict[
-                point].integrity > 60) or self.simulation.tile_dict[point].__class__ == Water) \
+            if ((self.simulation.tile_dict[point].__class__ == Population
+                 and self.simulation.tile_dict[point].integrity > 60)
+                or self.simulation.tile_dict[point].__class__ == Water) \
                     and self.needs_refuel():
                 points_of_interest[2].append(point)
                 continue
 
-        if not points_of_interest[0] and not points_of_interest[1] and not points_of_interest[2]:
-            temp = remove_points(give_directions(drones_around), all_directions)
-            if temp:
-                self.move(random.choice(temp))
-                return
-            else:
-                self.move(-1)
+        if points_of_interest[0] or points_of_interest[1] or points_of_interest[2]:
+            for i in range(0, 3):
+                direction_lists[i] = give_directions(points_of_interest[i])
 
-        for i in range(0, 3):
-            direction_lists[i] = give_directions(points_of_interest[i])
+            for direction_list in direction_lists:
+                dirs = [d for d in direction_list if d not in give_directions(drones_around)]
+                if dirs:
+                    self.move(random.choice(dirs))
+                    return
 
-        for direction_list in direction_lists:
-            dirs = remove_points(give_directions(drones_around), direction_list)
-            if not dirs:
-                continue
-            else:
-                self.move(random.choice(dirs))
-                return
-
-        temp = remove_points(give_directions(drones_around), all_directions)
+        temp = [d for d in all_directions if d not in give_directions(drones_around)]
         if temp:
-            self.move(random.choice(temp))
+            self.move(random_direction())
             return
         else:
             self.move(-1)
@@ -270,8 +246,6 @@ class DroneReactive(Drone):
         return self.water_capacity <= 80
 
     def see_drones_around(self) -> list:
-        list_of_drones_around = []
-        for drone in self.simulation.drone_list:
-            if math.dist([self.point.x, self.point.y], [drone.point.x, drone.point.y]) == 1:
-                list_of_drones_around.append(drone.point)
-        return list_of_drones_around
+        return [drone.point for drone in self.simulation.drone_list
+                if math.dist([self.point.x, self.point.y], [drone.point.x, drone.point.y]) == 1]
+

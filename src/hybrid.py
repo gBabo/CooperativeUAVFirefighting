@@ -1,4 +1,3 @@
-from enum import Enum
 from drone import Drone
 from settings import *
 from util import *
@@ -136,24 +135,24 @@ class DroneHybrid(Drone):
 
     # plan execution
     def execute(self, action: Action):
-        if action == Action.Drop_Water:
+        if action == Action.Release_Water:
             self.put_out_fire()
         elif action == Action.Recharge:
             self.recharge(self.simulation.tile_dict[self.point])
         elif action == Action.Refuel:
             self.refuel(self.simulation.tile_dict[self.point])
         elif action == Action.Move_North:
-            self.move(3)
+            self.move(Direction.North)
         elif action == Action.Move_South:
-            self.move(2)
+            self.move(Direction.South)
         elif action == Action.Move_East:
-            self.move(1)
+            self.move(Direction.East)
         else:
-            # move West
-            self.move(0)
+            self.move(Direction.West)
 
     # check desires
     def needs_refuel(self):
+        # TODO possibly allow drone to go refill before is empty
         return self.water_capacity == 0
 
     def needs_recharge(self):
@@ -169,7 +168,4 @@ class DroneHybrid(Drone):
         pass
 
     def drone_positions_list(self) -> list:
-        drone_position_list = []
-        for drone in self.simulation.drone_list:
-            drone_position_list.append(drone.point)
-        return drone_position_list
+        return [drone.point for drone in self.simulation.drone_list]

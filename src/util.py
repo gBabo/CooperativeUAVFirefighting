@@ -1,3 +1,4 @@
+import random
 from dataclasses import dataclass
 from enum import Enum
 from math import sqrt
@@ -33,3 +34,7 @@ def number_of_steps_from_x_to_y(origin: Point, destiny: Point) -> int:
     number_of_steps_y = destiny.y - origin.y if destiny.y - origin.y > 0 else -(destiny.y - origin.y)
 
     return number_of_steps_y + number_of_steps_x
+
+
+def random_direction():
+    return random.choice([Direction.South, Direction.North, Direction.West, Direction.East])
