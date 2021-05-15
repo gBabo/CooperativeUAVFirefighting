@@ -118,9 +118,12 @@ class DroneHybrid(Drone):
         if action == Action.Drop_Water:
             return self.map[self.point].on_fire
         elif action == Action.Recharge:
-            return self.map[self.point].__class__ == Population and self.needs_recharge()
+            return self.map[self.point].__class__ == Population \
+                   and self.needs_recharge()
         elif action == Action.Refuel:
-            return (self.map[self.point].__class__ == Population or self.map[self.point].__class__ == Water) and self.needs_refuel()
+            return (self.map[self.point].__class__ == Population
+                    or self.map[self.point].__class__ == Water) \
+                   and self.needs_refuel()
         elif action == Action.Move_North:
             return Point(self.point.x, self.point.y + 1) not in self.drone_positions_list()
         elif action == Action.Move_South:
@@ -154,8 +157,10 @@ class DroneHybrid(Drone):
         return self.water_capacity == 0
 
     def needs_recharge(self):
-        closest_recharge_point = self.point.closest_point_from_list([tile for tile in self.map.values() if tile.__class__ == Population])
-        return number_of_steps_from_x_to_y(self.point, closest_recharge_point)* MOVEBATTERYCOST >= self.battery
+        populations = [tile for tile in self.map.values() if tile.__class__ == Population]
+        closest_recharge_point = self.point.closest_point_from_list(populations)
+        return number_of_steps_from_x_to_y(self.point, closest_recharge_point) \
+            * MOVEBATTERYCOST >= self.battery
 
     def sector_on_fire(self):
         pass
@@ -168,8 +173,3 @@ class DroneHybrid(Drone):
         for drone in self.simulation.drone_list:
             drone_position_list.append(drone.point)
         return drone_position_list
-
-
-
-
-

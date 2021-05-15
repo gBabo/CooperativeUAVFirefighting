@@ -1,14 +1,7 @@
 import random
 from dataclasses import dataclass, field
-from enum import Enum
+from util import Direction
 from tile import *
-
-
-class Direction(Enum):
-    North = 1
-    South = 2
-    East = 3
-    West = 4
 
 
 @dataclass

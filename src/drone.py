@@ -7,6 +7,7 @@ from util import Point
 from tile import Population
 from tile import Water
 from tile import Tile
+from util import Direction
 
 
 class Drone(pygame.sprite.Sprite, ABC):
@@ -56,43 +57,32 @@ class Drone(pygame.sprite.Sprite, ABC):
         for drone in self.simulation.drone_list:
             drone_points.append(drone.point)
 
+        point = self.point
         if direction == 0:
             # protect border limit
             if self.point.x < 31:
                 # right
                 point = Point(self.point.x + 1, self.point.y)
-                if point not in drone_points:
-                    self.point = point
-                    self.rect.center = [int((self.point.x * TILESIZE) + TILE_MARGIN_X),
-                                        int((self.point.y * TILESIZE) + TILE_MARGIN_Y)]
-
-        if direction == 1:
+        elif direction == 1:
             # protect border limit
             if self.point.x > 0:
                 # left
                 point = Point(self.point.x - 1, self.point.y)
-                if point not in drone_points:
-                    self.point = point
-                    self.rect.center = [int((self.point.x * TILESIZE) + TILE_MARGIN_X),
-                                        int((self.point.y * TILESIZE) + TILE_MARGIN_Y)]
-        if direction == 2:
+        elif direction == 2:
             # protect border limit
             if self.point.y < 31:
                 # down
                 point = Point(self.point.x, self.point.y + 1)
-                if point not in drone_points:
-                    self.point = point
-                    self.rect.center = [int((self.point.x * TILESIZE) + TILE_MARGIN_X),
-                                        int((self.point.y * TILESIZE) + TILE_MARGIN_Y)]
-        if direction == 3:
+        else:
             # protect border limit
             if self.point.y > 0:
                 # up
                 point = Point(self.point.x, self.point.y - 1)
-                if point not in drone_points:
-                    self.point = point
-                    self.rect.center = [int((self.point.x * TILESIZE) + TILE_MARGIN_X),
-                                        int((self.point.y * TILESIZE) + TILE_MARGIN_Y)]
+
+        if point not in drone_points:
+            self.point = point
+            self.rect.center = [int((self.point.x * TILESIZE) + TILE_MARGIN_X),
+                                int((self.point.y * TILESIZE) + TILE_MARGIN_Y)]
 
         self.spend_energy()
         if self.battery <= 0:
