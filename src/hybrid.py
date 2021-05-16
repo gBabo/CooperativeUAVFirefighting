@@ -34,7 +34,7 @@ class DroneHybrid(Drone):
     def agent_decision(self) -> None:
         self.update_beliefs()
 
-        if len(self.plan_queue) > 0 and not self.intention_success() and self.possible_intention():
+        if len(self.plan_queue) > 0 and not self.intention_success() and not self.impossible_intention():
             action = self.plan_queue.pop()
             if self.is_plan_sound(action):
                 self.execute(action)
@@ -91,8 +91,11 @@ class DroneHybrid(Drone):
             self.intention = {Desire.Find_Fire: None}
 
     # plan generation and rebuild
-    def possible_intention(self):
-        pass
+    def impossible_intention(self):
+        if self.intention.keys() == Desire.Release_Water:
+            return self.water_capacity < 0
+        else:
+            return False
 
     def intention_success(self):
         if self.intention.keys() == Desire.Release_Water:
