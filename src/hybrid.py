@@ -174,7 +174,7 @@ class DroneHybrid(Drone):
     def needs_recharge(self) -> bool:
         populations = [tile for tile in self.map.values() if tile.__class__ == Population]
         closest_recharge_point = self.point.closest_point_from_list(populations)
-        return (number_of_steps_from_x_to_y(self.point, closest_recharge_point) * 1) \
+        return (number_of_steps_from_x_to_y(self.point, closest_recharge_point) + 1) \
                * MOVEBATTERYCOST >= self.battery
 
     def sector_on_fire(self) -> bool:
