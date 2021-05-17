@@ -4,6 +4,7 @@ from hybrid import DroneHybrid
 from weather import *
 from sector import *
 from button import *
+from util import print_path_point
 import time
 
 
@@ -39,8 +40,9 @@ class Simulation:
         self.step_button = None
         self.step = False
 
-        # button and variable that make sim do one step in step mode
+        # button, step counter and variable that make sim do one step in step mode
         self.step_next_button = None
+        self.step_counter = 0
         self.step_pause = False
 
         # button and var that says to create reactive drones
@@ -68,6 +70,7 @@ class Simulation:
         self.init_and_draw_drones()
         time.sleep(1)
         while self.playing:
+            self.step_counter += 1
             while self.step and self.step_pause and self.playing and self.running:
                 self.check_events()
             self.step_pause = True
@@ -87,8 +90,7 @@ class Simulation:
 
             for sector in self.sector_list:
                 if sector.calculate_fire_alert(self.wildfire_list):
-                    # TODO add to sector on fire
-                    """print("FIRE! in sector " + str(sector.sectorID))"""
+                    print("FIRE! in sector " + str(sector.sectorID))
 
             self.update()
             self.draw()
@@ -411,6 +413,7 @@ class Simulation:
         return end
 
     def calculate_metrics(self):
+        print("Total Steps:", self.step_counter)
         print("Number of Fires:", len(self.wildfire_list))
         total_distance = total_priority_burned = n_tiles = 0
         for wildfire in self.wildfire_list:
@@ -424,6 +427,8 @@ class Simulation:
             total_distance += distance
             n_tiles += len(wildfire.tiles) + len(wildfire.tiles_burned)
             print("Max Fire Spread Distance:", distance)
+            # fire time to extinguish
+            print("Time to extinguish:", self.step_counter - wildfire.start_time)
 
         print("--------------------------------------\nTotal Priority On Fire and Burned:", total_priority_burned)
         print("Average Tile Priority On Fire and Burned:", total_priority_burned / n_tiles)
