@@ -34,11 +34,13 @@ class DroneHybrid(Drone):
 
     def can_reactive_decision(self) -> bool:
         desire = self.intention.get("Desire")
-        tile_class = self.map[self.point].__class__
+        tile_class = self.simulation.tile_dict[self.point].__class__
         if desire == Desire.Recharge:
             return tile_class == Population
-        if self.can_recharge() and tile_class == Population: return True
-        elif self.can_release_water() and self.map[self.point].on_fire: return True
+        if self.can_recharge() and tile_class == Population:
+            return True
+        elif self.can_release_water() and self.simulation.tile_dict[self.point].on_fire:
+            return True
         return False
 
     def agent_decision(self) -> None:
@@ -55,7 +57,7 @@ class DroneHybrid(Drone):
             self.build_plan()
 
     def update_beliefs(self):
-        if self.map[self.point].on_fire:
+        if self.simulation.tile_dict[self.point].on_fire:
             if self.point not in self.simulation.hybrid_drone_points_on_fire:
                 self.simulation.hybrid_drone_points_on_fire.append(self.point)
 
@@ -126,17 +128,20 @@ class DroneHybrid(Drone):
         pass
 
     def rebuild_plan(self):
-        pass
+        self.plan_queue = []
+        self.reactive_behaviour()
 
     def is_plan_sound(self, action: Action) -> bool:
-        if action == Action.Drop_Water:
-            return self.map[self.point].on_fire
+        if action == Action.Release_Water:
+            return self.simulation.tile_dict[self.point].on_fire
         elif action == Action.Recharge:
-            return self.map[self.point].__class__ == Population \
+            return self.simulation.tile_dict[self.point].__class__ == Population \
+                   and self.simulation.tile_dict[self.point].integration >= 60 \
                    and self.can_recharge()
         elif action == Action.Refuel:
-            return (self.map[self.point].__class__ == Population
-                    or self.map[self.point].__class__ == Water) \
+            return ((self.simulation.tile_dict[self.point].__class__ == Population
+                     and self.simulation.tile_dict[self.point].integration >= 60)
+                    or self.simulation.tile_dict[self.point].__class__ == Water) \
                    and self.can_refuel()
         elif action == Action.Move_North:
             return Point(self.point.x, self.point.y + 1) not in self.drone_positions_list()
@@ -174,8 +179,7 @@ class DroneHybrid(Drone):
     def needs_recharge(self) -> bool:
         populations = [tile for tile in self.map.values() if tile.__class__ == Population]
         closest_recharge_point = self.point.closest_point_from_list(populations)
-        return (number_of_steps_from_x_to_y(self.point, closest_recharge_point) + 1) \
-               * MOVEBATTERYCOST >= self.battery
+        return (number_of_steps_from_x_to_y(self.point, closest_recharge_point) + 1) * MOVEBATTERYCOST >= self.battery
 
     def sector_on_fire(self) -> bool:
         return self.sectors_on_fire != []
@@ -191,3 +195,24 @@ class DroneHybrid(Drone):
 
     def drone_positions_list(self) -> list:
         return [drone.point for drone in self.simulation.drone_list]
+
+    def reactive_behaviour(self) -> None:
+        if self.simulation[self.point].on_fire:
+            if self.point not in self.simulation.hybrid_drone_points_on_fire:
+                self.simulation.hybrid_drone_points_on_fire.append(self.point)
+            self.release_water()
+        elif self.simulation.tile_dict[self.point].__class__ == Population:
+            if (self.can_recharge() or self.can_refuel()) and self.simulation.tile_dict[self.point].integrity > 60:
+                self.recharge(self.simulation.tile_dict[self.point])
+                self.refuel(self.simulation.tile_dict[self.point])
+            else:
+                self.target_moving()
+        elif self.simulation.tile_dict[self.point].__class__ == Water:
+            if self.can_refuel():
+                self.refuel(self.simulation.tile_dict[self.point])
+            else:
+                self.target_moving()
+        else:
+            self.target_moving()
+
+        return

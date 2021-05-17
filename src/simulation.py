@@ -20,6 +20,8 @@ class Simulation:
         self.drone_group = pygame.sprite.Group()
         # to put created tiles dont know/can do the same with the Group above
         self.tile_dict = {}
+        # none actualized tile map for hybrid drone
+        self.hybrid_drone_map = {}
         # to put created tiles dont know/can do the same with the Group above
         self.drone_list = []
         self.wind = Wind(
@@ -164,6 +166,7 @@ class Simulation:
                     tile = Water(self, x, y)
                 self.tile_group.add(tile)
                 self.tile_dict[tile.point] = tile
+                self.hybrid_drone_map[tile.point] = tile
 
     def create_naive_drones(self):
         drone = DroneNaive(self, 16, 16)
@@ -214,7 +217,7 @@ class Simulation:
             self.drone_list.append(drone)
 
     def create_hybrid_drones(self):
-        drone = DroneHybrid(self, 16, 16, self.tile_dict)
+        drone = DroneHybrid(self, 16, 16, self.hybrid_drone_map)
         self.drone_group.add(drone)
         self.drone_list.append(drone)
 
