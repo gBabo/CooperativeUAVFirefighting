@@ -31,9 +31,6 @@ class Wildfire:
             self.points.append(tile.point)
             self.tiles.append(tile)
 
-    def fire_spread(self):
-        return len(self.tiles) - 1
-
     def max_fire_spread_distance(self):
         max_distance = 1
         for point in self.points:

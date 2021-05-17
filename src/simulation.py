@@ -87,8 +87,8 @@ class Simulation:
 
             for sector in self.sector_list:
                 if sector.calculate_fire_alert(self.wildfire_list):
-                    filler = "filler"
-                    # print("FIRE! in sector " + str(sector.sectorID))
+                    # TODO add to sector on fire
+                    """print("FIRE! in sector " + str(sector.sectorID))"""
 
             self.update()
             self.draw()

@@ -177,7 +177,6 @@ class DroneReactive(Drone):
         return
 
     def target_moving(self) -> None:
-
         def give_directions(ps: list) -> list:
             directions = []
             for p in ps:
@@ -240,7 +239,7 @@ class DroneReactive(Drone):
             return
 
     def needs_recharge(self) -> bool:
-        return self.battery < 50
+        return self.battery <= 50
 
     def needs_refuel(self) -> bool:
         return self.water_capacity <= 80
