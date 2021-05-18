@@ -41,7 +41,7 @@ class Point:
         point = tiles[0].point
 
         for tile in tiles:
-            point = (point, tile.point)[self.distanceTo(tile.point) >
+            point = (point, tile.point)[self.distanceTo(tile.point) <
                                         self.distanceTo(point)]
 
         return point
@@ -50,7 +50,7 @@ class Point:
         point = points[0]
 
         for p in points:
-            point = (point, p)[self.distanceTo(p) > self.distanceTo(point)]
+            point = (point, p)[self.distanceTo(p) < self.distanceTo(point)]
 
         return point
 

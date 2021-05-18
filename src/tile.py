@@ -50,7 +50,6 @@ class Water(Tile):
     def __init__(self, simulation, x, y):
         super().__init__(simulation, x, y, BLUE)
         self.integrity = 1
-        self.path_able = False
 
 
 def get_neighbours(tile: Tile, tile_dict: dict) -> List[Tile]:

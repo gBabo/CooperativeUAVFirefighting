@@ -220,7 +220,7 @@ class Simulation:
             self.drone_list.append(drone)
 
     def create_hybrid_drones(self):
-        drone = DroneHybrid(self, 16, 16, self.hybrid_drone_map)
+        drone = DroneHybrid(self, 16, 15, self.hybrid_drone_map)
         self.drone_group.add(drone)
         self.drone_list.append(drone)
 
