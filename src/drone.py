@@ -185,12 +185,11 @@ class DroneNaive(Drone):
         if self.simulation.tile_dict[self.point].on_fire and self.water_capacity > 0:
             self.put_out_fire()
 
-        elif self.simulation.tile_dict[self.point].__class__ == Population and (
-                self.needs_recharge() or self.needs_refuel()):
-            self.refuel()
+        elif self.simulation.tile_dict[self.point].__class__ == Population and self.needs_recharge():
             self.recharge()
 
-        elif self.simulation.tile_dict[self.point].__class__ == Water and self.needs_refuel():
+        elif (self.simulation.tile_dict[self.point].__class__ == Water or
+              self.simulation.tile_dict[self.point].__class__ == Population) and self.needs_refuel():
             self.refuel()
         else:
             self.move(random_direction())
@@ -211,8 +210,9 @@ class DroneReactive(Drone):
             self.put_out_fire()
 
         elif self.simulation.tile_dict[self.point].__class__ == Population:
-            if self.needs_recharge() or self.needs_refuel():
+            if self.needs_recharge():
                 self.recharge()
+            elif self.needs_refuel():
                 self.refuel()
             else:
                 self.target_moving()
@@ -224,7 +224,6 @@ class DroneReactive(Drone):
                 self.target_moving()
         else:
             self.target_moving()
-
         return
 
     def needs_recharge(self) -> bool:

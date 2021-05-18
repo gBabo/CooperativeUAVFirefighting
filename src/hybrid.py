@@ -51,28 +51,39 @@ class DroneHybrid(Drone):
         tile_class = self.map[self.point].__class__
 
         if desire == Desire.Recharge: return tile_class == Population
-        if self.battery < 75 and tile_class == Population: return True
-        elif self.water_capacity < 75 and (tile_class == Population or tile_class == Water): return True
-        elif self.can_release_water() and self.map[self.point].on_fire: return True
+        if self.battery < 75 and tile_class == Population:
+            return True
+        elif self.water_capacity < 75 and (tile_class == Population or tile_class == Water):
+            return True
+        elif self.can_release_water() and self.map[self.point].on_fire:
+            return True
         return False
 
     def simple_reactive_action(self) -> None:
         tile_class = self.map[self.point].__class__
 
-        if self.battery < 75 and tile_class == Population: self.execute(Action.Recharge)
-        elif self.water_capacity < 75 and (tile_class == Population or tile_class == Water): self.execute(Action.Refuel)
-        elif self.can_release_water() and self.map[self.point].on_fire: self.execute(Action.Release_Water)
+        if self.battery < 75 and tile_class == Population:
+            self.execute(Action.Recharge)
+        elif self.water_capacity < 75 and (tile_class == Population or tile_class == Water):
+            self.execute(Action.Refuel)
+        elif self.can_release_water() and self.map[self.point].on_fire:
+            self.execute(Action.Release_Water)
 
     def agent_decision(self) -> None:
         self.update_beliefs()
 
-        if self.can_reactive_decision(): self.simple_reactive_action()
-        elif len(self.plan_queue) > 0 and not self.intention_success() and not self.impossible_intention():
+        if self.can_reactive_decision():
+            self.simple_reactive_action()
+        elif len(self.plan_queue) > 0 and not self.intention_success():
             action = self.plan_queue.pop(__index=0)
             if self.is_plan_sound(action):
                 self.execute(action)
             else:
                 self.rebuild_plan()
+
+            if self.reconsider():
+                self.deliberate()
+                self.build_plan()
         else:
             self.deliberate()
             self.build_plan()
@@ -123,12 +134,8 @@ class DroneHybrid(Drone):
             self.intention = {"Desire": Desire.Find_Fire, "Point": None}
 
     # plan generation and rebuild
-    def impossible_intention(self) -> bool:
-        desire = self.intention.get("Desire")
-        if desire == Desire.Release_Water:
-            return not self.can_release_water()
-        else:
-            return False
+    def reconsider(self) -> bool:
+        return (self.intention.get("Desire") != Desire.Recharge) and self.needs_recharge()
 
     def intention_success(self) -> bool:
         desire = self.intention.get("Desire")
@@ -145,18 +152,18 @@ class DroneHybrid(Drone):
             return [point for point in self.fov if self.map[point].on_fire] != []
 
     def build_plan(self):
-        movement_plan = self.build_path_plan(self.point, self.intention.get("Point"))
+        self.plan_queue = self.build_path_plan(self.point, self.intention.get("Point"))
 
         desire = self.intention.get("Desire")
         if desire == Desire.Release_Water:
-            movement_plan.append(Action.Release_Water)
+            self.plan_queue.append(Action.Release_Water)
         elif desire == Desire.Recharge:
-            movement_plan.append(Action.Recharge)
+            self.plan_queue.append(Action.Recharge)
         elif desire == Desire.Refuel:
-            movement_plan.append(Action.Refuel)
+            self.plan_queue.append(Action.Refuel)
 
         print(desire)
-        print(movement_plan)
+        print(self.plan_queue)
 
     def build_path_plan(self, start: Point, dest: Point):
         path = print_path_point(start.find_path_bfs_from(dest, self.map))
@@ -241,8 +248,9 @@ class DroneHybrid(Drone):
                 self.simulation.hybrid_drone_points_on_fire.append(self.point)
             self.release_water()
         elif self.simulation.tile_dict[self.point].__class__ == Population:
-            if self.can_recharge() or self.can_refuel():
+            if self.can_recharge():
                 self.recharge()
+            elif self.can_refuel():
                 self.refuel()
             else:
                 self.target_moving()
