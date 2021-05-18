@@ -3,10 +3,12 @@ from dataclasses import dataclass, field
 from util import Direction
 from tile import *
 
+
 @dataclass
 class Wind:
     direction: Direction
     strength: int = 10  # Max Intensity
+
 
 @dataclass(order=True)
 class Wildfire:
@@ -49,6 +51,7 @@ class Wildfire:
             priority_value_on_fire += tile_on_fire.priority
         return priority_value_on_fire
 
+
 def update_wildfire(wild: Wildfire) -> None:
     for tile in wild.tiles:
         decreased = tile.integrity - tile.fire_intensity
@@ -67,7 +70,6 @@ def update_wildfire(wild: Wildfire) -> None:
 
 
 def expand_wildfire(wild: Wildfire, tile_dict: dict, wind: Wind) -> None:
-    #wild.start_time += 1
     direct = [Direction.North, Direction.South, Direction.East, Direction.West] \
             + (wind.strength - 1) * [wind.direction]
     types = [Population, Forest, Road]
