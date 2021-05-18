@@ -33,7 +33,7 @@ class Simulation:
         self.sector_list: List[Sector] = []
         self.population_list: List[Tile] = []
 
-        self.hybrid_drone_sectors_on_fire: List[int] = []
+        self.hybrid_drone_sectors_on_fire: List[Sector] = []
         self.hybrid_drone_points_on_fire: List[Point] = []
 
         self.fire_image = pygame.Surface((TILESIZE/2, TILESIZE/2))
@@ -95,6 +95,7 @@ class Simulation:
             for sector in self.sector_list:
                 if sector.calculate_fire_alert(self.wildfire_list):
                     print("FIRE! in sector " + str(sector.sectorID))
+                    self.hybrid_drone_sectors_on_fire.append(sector)
 
             self.update()
             self.draw()

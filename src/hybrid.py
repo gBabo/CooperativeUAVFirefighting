@@ -25,15 +25,15 @@ class Action(Enum):
 def direction_action(fromPoint, toPoint):
     x_move = toPoint.x - fromPoint.x
     if x_move == 1:
-        return Action.Move_East
-    elif x_move == -1:
         return Action.Move_West
+    elif x_move == -1:
+        return Action.Move_East
 
     y_move = toPoint.y - fromPoint.y
     if y_move == 1:
-        return Action.Move_North
-    elif y_move == -1:
         return Action.Move_South
+    elif y_move == -1:
+        return Action.Move_North
 
 
 class DroneHybrid(Drone):
@@ -72,10 +72,9 @@ class DroneHybrid(Drone):
     def agent_decision(self) -> None:
         self.update_beliefs()
 
-        if self.can_reactive_decision():
-            self.simple_reactive_action()
+        if self.can_reactive_decision(): self.simple_reactive_action()
         elif len(self.plan_queue) > 0 and not self.intention_success():
-            action = self.plan_queue.pop(__index=0)
+            action = self.plan_queue.pop(0)
             if self.is_plan_sound(action):
                 self.execute(action)
             else:
@@ -89,12 +88,13 @@ class DroneHybrid(Drone):
             self.build_plan()
 
     def update_beliefs(self):
-        for point in self.fov():
+        self.fov = self.calculate_fov()
+        for point in self.fov:
             if self.map[point].on_fire and point not in self.points_on_fire:
                 self.points_on_fire.append(point)
                 for sec in self.simulation.sector_list:
-                    if point in sec.sectorTiles and sec.sectorID not in self.sectors_on_fire:
-                        self.sectors_on_fire.append(sec.sectorID)
+                    if point in sec.sectorTiles and sec not in self.sectors_on_fire:
+                        self.sectors_on_fire.append(sec)
 
     def deliberate(self) -> None:
         desires = []
@@ -106,7 +106,7 @@ class DroneHybrid(Drone):
             desires.append(Desire.Recharge)
         if self.sector_on_fire():
             desires.append(Desire.Move_to_Sector)
-        if self.can_release_water():
+        if self.can_release_water() and self.map[self.point].on_fire:
             desires.append(Desire.Release_Water)
         if not desires:
             desires.append(Desire.Find_Fire)
@@ -131,7 +131,8 @@ class DroneHybrid(Drone):
         elif Desire.Release_Water in desires:
             self.intention = {"Desire": Desire.Release_Water, "Point": self.point}
         else:
-            self.intention = {"Desire": Desire.Find_Fire, "Point": None}
+            point = random.choice([p for p in self.fov if p != self.point])
+            self.intention = {"Desire": Desire.Find_Fire, "Point": point}
 
     # plan generation and rebuild
     def reconsider(self) -> bool:
@@ -146,7 +147,7 @@ class DroneHybrid(Drone):
         elif desire == Desire.Refuel:
             return self.last_action == Action.Refuel
         elif desire == Desire.Move_to_Sector:
-            return self.point in self.simulation.sector_list[self.intention.get("Point")]
+            return self.point == self.intention.get("Point")
         else:
             # find fire
             return [point for point in self.fov if self.map[point].on_fire] != []
@@ -261,5 +262,4 @@ class DroneHybrid(Drone):
                 self.target_moving()
         else:
             self.target_moving()
-
         return

@@ -4,14 +4,13 @@ from typing import List
 import random
 
 
-@dataclass(repr=True)
+@dataclass(order=True, repr=True)
 class Sector:
     sectorID: int
-    probabilityPerFireTile: float
-    sectorSize: int
-
+    probabilityPerFireTile: float = field(compare=False)
+    sectorSize: int = field(compare=False)
     sectorTiles: List[Point] = field(default_factory=list, compare=False)
-    sectorOnFire: bool = field(default=False)
+    sectorOnFire: bool = field(default=False, compare=False)
 
     def create_sector(self, leftCornerX: int, leftCornerY: int):
         for y in range(leftCornerY, leftCornerY + self.sectorSize, 1):
