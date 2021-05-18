@@ -6,7 +6,6 @@ from abc import ABC, abstractmethod
 from util import Point, random_direction
 from tile import Population
 from tile import Water
-from tile import Tile
 from util import Direction
 
 
@@ -24,26 +23,13 @@ class Drone(pygame.sprite.Sprite, ABC):
         self.water_capacity = BATTERY
         self.fov = self.calculate_fov()
 
-    def recharge(self, tile: Tile) -> None:
-        if tile.__class__ == Population:
-            if tile.integrity >= 60:
-                self.battery = BATTERY
-            else:
-                return
-        else:
-            return
+    def recharge(self) -> None:
+        self.battery = BATTERY
+        return
 
-    def refuel(self, tile: Tile) -> None:
-        if tile.__class__ == Population:
-            if tile.integrity >= 60:
-                self.water_capacity = WATERCAPACITY
-                return
-            else:
-                return
-        elif tile.__class__ == Water:
-            self.water_capacity = WATERCAPACITY
-        else:
-            return
+    def refuel(self) -> None:
+        self.water_capacity = WATERCAPACITY
+        return
 
     def release_water(self) -> None:
         self.water_capacity -= WATERRELEASED
@@ -147,12 +133,10 @@ class Drone(pygame.sprite.Sprite, ABC):
                 points_of_interest[0].append(point)
                 continue
             if self.simulation.tile_dict[point].__class__ == Population \
-                    and self.simulation.tile_dict[point].integrity > 60 \
                     and self.needs_recharge():
                 points_of_interest[1].append(point)
                 continue
-            if ((self.simulation.tile_dict[point].__class__ == Population
-                 and self.simulation.tile_dict[point].integrity > 60)
+            if (self.simulation.tile_dict[point].__class__ == Population
                 or self.simulation.tile_dict[point].__class__ == Water) \
                     and self.needs_refuel():
                 points_of_interest[2].append(point)
@@ -203,11 +187,11 @@ class DroneNaive(Drone):
 
         elif self.simulation.tile_dict[self.point].__class__ == Population and (
                 self.needs_recharge() or self.needs_refuel()):
-            self.refuel(self.simulation.tile_dict[self.point])
-            self.recharge(self.simulation.tile_dict[self.point])
+            self.refuel()
+            self.recharge()
 
         elif self.simulation.tile_dict[self.point].__class__ == Water and self.needs_refuel():
-            self.refuel(self.simulation.tile_dict[self.point])
+            self.refuel()
         else:
             self.move(random_direction())
 
@@ -227,15 +211,15 @@ class DroneReactive(Drone):
             self.put_out_fire()
 
         elif self.simulation.tile_dict[self.point].__class__ == Population:
-            if (self.needs_recharge() or self.needs_refuel()) and self.simulation.tile_dict[self.point].integrity > 60:
-                self.recharge(self.simulation.tile_dict[self.point])
-                self.refuel(self.simulation.tile_dict[self.point])
+            if self.needs_recharge() or self.needs_refuel():
+                self.recharge()
+                self.refuel()
             else:
                 self.target_moving()
 
         elif self.simulation.tile_dict[self.point].__class__ == Water:
             if self.needs_refuel():
-                self.refuel(self.simulation.tile_dict[self.point])
+                self.refuel()
             else:
                 self.target_moving()
         else:

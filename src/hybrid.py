@@ -136,11 +136,9 @@ class DroneHybrid(Drone):
             return self.simulation.tile_dict[self.point].on_fire
         elif action == Action.Recharge:
             return self.simulation.tile_dict[self.point].__class__ == Population \
-                   and self.simulation.tile_dict[self.point].integration >= 60 \
                    and self.can_recharge()
         elif action == Action.Refuel:
-            return ((self.simulation.tile_dict[self.point].__class__ == Population
-                     and self.simulation.tile_dict[self.point].integration >= 60)
+            return (self.simulation.tile_dict[self.point].__class__ == Population
                     or self.simulation.tile_dict[self.point].__class__ == Water) \
                    and self.can_refuel()
         elif action == Action.Move_North:
@@ -158,9 +156,9 @@ class DroneHybrid(Drone):
         if action == Action.Release_Water:
             self.put_out_fire()
         elif action == Action.Recharge:
-            self.recharge(self.simulation.tile_dict[self.point])
+            self.recharge()
         elif action == Action.Refuel:
-            self.refuel(self.simulation.tile_dict[self.point])
+            self.refuel()
         elif action == Action.Move_North:
             self.move(Direction.North)
         elif action == Action.Move_South:
@@ -202,14 +200,14 @@ class DroneHybrid(Drone):
                 self.simulation.hybrid_drone_points_on_fire.append(self.point)
             self.release_water()
         elif self.simulation.tile_dict[self.point].__class__ == Population:
-            if (self.can_recharge() or self.can_refuel()) and self.simulation.tile_dict[self.point].integrity > 60:
-                self.recharge(self.simulation.tile_dict[self.point])
-                self.refuel(self.simulation.tile_dict[self.point])
+            if self.can_recharge() or self.can_refuel():
+                self.recharge()
+                self.refuel()
             else:
                 self.target_moving()
         elif self.simulation.tile_dict[self.point].__class__ == Water:
             if self.can_refuel():
-                self.refuel(self.simulation.tile_dict[self.point])
+                self.refuel()
             else:
                 self.target_moving()
         else:
