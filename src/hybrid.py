@@ -125,8 +125,7 @@ class DroneHybrid(Drone):
             return [point for point in self.fov if self.map[point].on_fire] != []
 
     def build_plan(self):
-        movement_plan = build_path_plan()
-        
+        movement_plan = build_path_plan(self.point, self.intention.get("Point"))
         print(movement_plan)
 
         desire = self.intention.get("Desire")
