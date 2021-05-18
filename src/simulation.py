@@ -430,7 +430,7 @@ class Simulation:
             # spread
             distance = wildfire.max_fire_spread_distance()
             total_distance += distance
-            n_tiles += len(wildfire.tiles) + len(wildfire.tiles_burned)
+            n_tiles += len(wildfire.points)
             print("Max Fire Spread Distance:", distance)
             # fire time to extinguish
             if wildfire.stop_time:
