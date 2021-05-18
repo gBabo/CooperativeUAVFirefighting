@@ -125,7 +125,43 @@ class DroneHybrid(Drone):
             return [point for point in self.fov if self.map[point].on_fire] != []
 
     def build_plan(self):
+        movement_plan = self.build_path_plan(self.point, self.intention.get("Point"))
+
+        desire = self.intention.get("Desire")
+        if desire == Desire.Release_Water:
+            movement_plan.append(Action.Release_Water)
+        elif desire == Desire.Recharge:
+            movement_plan.append(Action.Recharge)
+        elif desire == Desire.Refuel:
+            movement_plan.append(Action.Refuel)
+
+        print(desire)
+        print(movement_plan)
+
         pass
+
+    def build_path_plan(self, start: Point, dest: Point):
+        path = print_path_point(start.find_path_bfs_from(dest, self.map))
+        #print(path)
+
+        result_plan = []
+        while len(path) > 1:
+            result_plan.append(self.direction_action(path[0], path[1]))
+            path = path[1:]
+        return result_plan
+
+    def direction_action(self, fromPoint, toPoint):
+        x_move = toPoint.x - fromPoint.x
+        if x_move == 1:
+            return Action.Move_East
+        elif x_move == -1:
+            return Action.Move_West
+
+        y_move = toPoint.y - fromPoint.y
+        if y_move == 1:
+            return Action.Move_North
+        elif y_move == -1:
+            return Action.Move_South
 
     def rebuild_plan(self):
         self.plan_queue = []

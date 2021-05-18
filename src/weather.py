@@ -16,6 +16,7 @@ class Wildfire:
     points: List[Point] = field(default_factory=list, compare=False)
     tiles: List[Tile] = field(default_factory=list, compare=False)
     tiles_burned: List[Tile] = field(default_factory=list, compare=False)
+    stop_time: int = field(default=0, compare=False)
 
     def __str__(self):
         return "Wildfire ID: " + str(self.wid) \

@@ -89,6 +89,8 @@ class Simulation:
             for wild in self.wildfire_list:
                 update_wildfire(wild)
                 expand_wildfire(wild, self.tile_dict, self.wind)
+                if not wild.stop_time and not len(wild.tiles):
+                    wild.stop_time = self.step_counter
 
             for sector in self.sector_list:
                 if sector.calculate_fire_alert(self.wildfire_list):
@@ -428,10 +430,13 @@ class Simulation:
             # spread
             distance = wildfire.max_fire_spread_distance()
             total_distance += distance
-            n_tiles += len(wildfire.tiles) + len(wildfire.tiles_burned)
+            n_tiles += len(wildfire.points)
             print("Max Fire Spread Distance:", distance)
             # fire time to extinguish
-            print("Time to extinguish:", self.step_counter - wildfire.start_time)
+            if wildfire.stop_time:
+                print("Time to extinguish:", wildfire.stop_time - wildfire.start_time)
+            else:
+                print("Time to extinguish: Was not extinguished.")
 
         print("--------------------------------------\nTotal Priority On Fire and Burned:", total_priority_burned)
         print("Average Tile Priority On Fire and Burned:", total_priority_burned / n_tiles)
