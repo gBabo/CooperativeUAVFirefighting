@@ -89,7 +89,7 @@ class Simulation:
             for wild in self.wildfire_list:
                 update_wildfire(wild)
                 expand_wildfire(wild, self.tile_dict, self.wind)
-                if len(wild.tiles) == 0:
+                if not wild.stop_time and not len(wild.tiles):
                     wild.stop_time = self.step_counter
 
             for sector in self.sector_list:
