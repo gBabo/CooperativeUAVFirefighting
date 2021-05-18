@@ -4,11 +4,13 @@ from enum import Enum
 from math import sqrt
 from collections import deque
 
+
 class Direction(Enum):
     North = 1
     South = 2
     East = 3
     West = 4
+
 
 class Node:
     def __init__(self, x, y, parent):
@@ -19,11 +21,13 @@ class Node:
     def __repr__(self):
         return str((self.x, self.y))
 
+
 # Utility function to print path from source to destination
 def print_path_point(node):
     if node is None:
         return []
     return [Point(node.x, node.y)] + print_path_point(node.parent)
+
 
 @dataclass(order=True, repr=True, frozen=True)
 class Point:
@@ -33,12 +37,20 @@ class Point:
     def distanceTo(self, toPoint):
         return sqrt((toPoint.x - self.x) ** 2 + (toPoint.y - self.y) ** 2)
 
-    def closest_point_from_list(self, tiles):
+    def closest_point_from_tiles(self, tiles):
         point = tiles[0].point
 
         for tile in tiles:
             point = (point, tile.point)[self.distanceTo(tile.point) >
                                         self.distanceTo(point)]
+
+        return point
+
+    def closest_point_from_points(self, points):
+        point = points[0]
+
+        for p in points:
+            point = (point, p)[self.distanceTo(p) > self.distanceTo(point)]
 
         return point
 
@@ -89,6 +101,7 @@ class Point:
  
         # return None if the path is not possible
         return None
+
 
 def number_of_steps_from_x_to_y(origin: Point, destiny: Point) -> int:
     number_of_steps_x = destiny.x - origin.x if destiny.x - origin.x > 0 else -(destiny.x - origin.x)

@@ -13,6 +13,7 @@ class Tile(pygame.sprite.Sprite, ABC):
         self.image.fill(color)
         self.rect = self.image.get_rect()
         self.point = Point(x, y)
+        self.sector = 0
         self.on_fire = False
         self.fire_intensity = 0
         self.integrity = 0

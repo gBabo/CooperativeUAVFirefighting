@@ -22,31 +22,52 @@ class Action(Enum):
     Move_West = 7
 
 
+def direction_action(fromPoint, toPoint):
+    x_move = toPoint.x - fromPoint.x
+    if x_move == 1:
+        return Action.Move_East
+    elif x_move == -1:
+        return Action.Move_West
+
+    y_move = toPoint.y - fromPoint.y
+    if y_move == 1:
+        return Action.Move_North
+    elif y_move == -1:
+        return Action.Move_South
+
+
 class DroneHybrid(Drone):
     def __init__(self, simulation, x, y, tile_dict: dict):
         super().__init__(simulation, x, y)
         self.map = tile_dict
         self.intention = {"Desire": None, "Point": None}
-        self.sectors_on_fire = []
+        self.sectors_on_fire = simulation.hybrid_drone_sectors_on_fire
+        self.points_on_fire = simulation.hybrid_drone_points_on_fire
         self.plan_queue = []
-        self.target_sector = None
         self.last_action = None
 
     def can_reactive_decision(self) -> bool:
         desire = self.intention.get("Desire")
-        tile_class = self.simulation.tile_dict[self.point].__class__
-        if desire == Desire.Recharge:
-            return tile_class == Population
-        if self.can_recharge() and tile_class == Population:
-            return True
-        elif self.can_release_water() and self.simulation.tile_dict[self.point].on_fire:
-            return True
+        tile_class = self.map[self.point].__class__
+
+        if desire == Desire.Recharge: return tile_class == Population
+        if self.battery < 75 and tile_class == Population: return True
+        elif self.water_capacity < 75 and (tile_class == Population or tile_class == Water): return True
+        elif self.can_release_water() and self.map[self.point].on_fire: return True
         return False
+
+    def simple_reactive_action(self) -> None:
+        tile_class = self.map[self.point].__class__
+
+        if self.battery < 75 and tile_class == Population: self.execute(Action.Recharge)
+        elif self.water_capacity < 75 and (tile_class == Population or tile_class == Water): self.execute(Action.Refuel)
+        elif self.can_release_water() and self.map[self.point].on_fire: self.execute(Action.Release_Water)
 
     def agent_decision(self) -> None:
         self.update_beliefs()
 
-        if len(self.plan_queue) > 0 and not self.intention_success() and not self.impossible_intention():
+        if self.can_reactive_decision(): self.simple_reactive_action()
+        elif len(self.plan_queue) > 0 and not self.intention_success() and not self.impossible_intention():
             action = self.plan_queue.pop(__index=0)
             if self.is_plan_sound(action):
                 self.execute(action)
@@ -57,12 +78,12 @@ class DroneHybrid(Drone):
             self.build_plan()
 
     def update_beliefs(self):
-        if self.simulation.tile_dict[self.point].on_fire:
-            if self.point not in self.simulation.hybrid_drone_points_on_fire:
-                self.simulation.hybrid_drone_points_on_fire.append(self.point)
-
-        if self.target_sector not in self.simulation.hybrid_drone_sectors_on_fire:
-            self.target_sector = None
+        for point in self.fov():
+            if self.map[point].on_fire and point not in self.points_on_fire:
+                self.points_on_fire.append(point)
+                for sec in self.simulation.sector_list:
+                    if point in sec.sectorTiles and sec.sectorID not in self.sectors_on_fire:
+                        self.sectors_on_fire.append(sec.sectorID)
 
     def deliberate(self) -> None:
         desires = []
@@ -82,21 +103,20 @@ class DroneHybrid(Drone):
         # Filtering Options
         if Desire.Recharge in desires:
             self.intention = {"Desire": Desire.Recharge,
-                              "Point": self.point.closest_point_from_list(
+                              "Point": self.point.closest_point_from_tiles(
                                   [tile for tile in self.map.values() if tile.__class__ == Population])}
         elif Desire.Refuel in desires:
             self.intention = {"Desire": Desire.Refuel,
-                              "Point": self.point.closest_point_from_list(
+                              "Point": self.point.closest_point_from_tiles(
                                   [tile for tile in self.map.values() if tile.__class__ in [Population, Water]])}
         elif Desire.Move_to_Sector in desires:
-            sectors_tiles = []
+            sectors_points = []
 
             for sec in self.sectors_on_fire:
-                sectors_tiles.append(sec.sectorTiles)
+                sectors_points += sec.sectorTiles
 
             self.intention = {"Desire": Desire.Move_to_Sector,
-                              "Point": self.point.closest_point_from_list(
-                                  [tile for tile in sectors_tiles])}
+                              "Point": self.point.closest_point_from_points(sectors_points)}
         elif Desire.Release_Water in desires:
             self.intention = {"Desire": Desire.Release_Water, "Point": self.point}
         else:
@@ -119,7 +139,7 @@ class DroneHybrid(Drone):
         elif desire == Desire.Refuel:
             return self.last_action == Action.Refuel
         elif desire == Desire.Move_to_Sector:
-            return self.point in self.simulation.sector_list[self.target_sector]
+            return self.point in self.simulation.sector_list[self.intention.get("Point")]
         else:
             # find fire
             return [point for point in self.fov if self.map[point].on_fire] != []
@@ -138,30 +158,15 @@ class DroneHybrid(Drone):
         print(desire)
         print(movement_plan)
 
-        pass
-
     def build_path_plan(self, start: Point, dest: Point):
         path = print_path_point(start.find_path_bfs_from(dest, self.map))
-        #print(path)
+        # print(path)
 
         result_plan = []
         while len(path) > 1:
-            result_plan.append(self.direction_action(path[0], path[1]))
+            result_plan.append(direction_action(path[0], path[1]))
             path = path[1:]
         return result_plan
-
-    def direction_action(self, fromPoint, toPoint):
-        x_move = toPoint.x - fromPoint.x
-        if x_move == 1:
-            return Action.Move_East
-        elif x_move == -1:
-            return Action.Move_West
-
-        y_move = toPoint.y - fromPoint.y
-        if y_move == 1:
-            return Action.Move_North
-        elif y_move == -1:
-            return Action.Move_South
 
     def rebuild_plan(self):
         self.plan_queue = []
@@ -212,14 +217,14 @@ class DroneHybrid(Drone):
 
     def needs_recharge(self) -> bool:
         populations = [tile for tile in self.map.values() if tile.__class__ == Population]
-        closest_recharge_point = self.point.closest_point_from_list(populations)
+        closest_recharge_point = self.point.closest_point_from_tiles(populations)
         return (number_of_steps_from_x_to_y(self.point, closest_recharge_point) + 1) * MOVEBATTERYCOST >= self.battery
 
     def sector_on_fire(self) -> bool:
         return self.sectors_on_fire != []
 
     def can_release_water(self) -> bool:
-        return self.water_capacity >= 0
+        return self.water_capacity > 0
 
     def can_recharge(self) -> bool:
         return self.battery < 100
