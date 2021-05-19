@@ -19,6 +19,7 @@ class Tile(pygame.sprite.Sprite, ABC):
         self.integrity = 0
         self.priority = 0
         self.path_able = True
+        self.wet = False
         self.rect.center = [int((x * TILESIZE) + TILE_MARGIN_X), int((y * TILESIZE) + TILE_MARGIN_Y)]
 
     def __repr__(self):
@@ -50,6 +51,7 @@ class Water(Tile):
     def __init__(self, simulation, x, y):
         super().__init__(simulation, x, y, BLUE)
         self.integrity = 1
+        self.wet = True
 
 
 def get_neighbours(tile: Tile, tile_dict: dict) -> List[Tile]:

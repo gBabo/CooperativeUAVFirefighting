@@ -94,7 +94,7 @@ def expand_wildfire(wild: Wildfire, tile_dict: dict, wind: Wind) -> None:
                 if tile.point.x == 0:
                     continue
                 new = tile_dict[Point(tile.point.x - 1, tile.point.y)]
-            if new.__class__ == Water or new.on_fire or new.integrity == 0:
+            if new.wet or new.on_fire or new.integrity == 0:
                 continue
             if new.__class__ not in random.choices(types, weights=[0.3, 0.6, 0.1], k=1):
                 continue

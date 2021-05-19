@@ -89,6 +89,7 @@ class Drone(pygame.sprite.Sprite, ABC):
             tile = self.simulation.tile_dict[self.point]
             self.release_water()
             tile.fire_intensity -= 5
+            tile.wet = True
 
         self.spend_energy()
         self.is_dead()
