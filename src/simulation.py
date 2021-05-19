@@ -220,9 +220,31 @@ class Simulation:
             self.drone_list.append(drone)
 
     def create_hybrid_drones(self):
-        drone = DroneHybrid(self, 16, 15, self.hybrid_drone_map)
+        drone = DroneHybrid(self, 16, 16, self.hybrid_drone_map)
         self.drone_group.add(drone)
         self.drone_list.append(drone)
+        if not self.debug_mode:
+            """drone = DroneHybrid(self, 15, 16, self.hybrid_drone_map)
+            self.drone_group.add(drone)
+            self.drone_list.append(drone)
+            drone = DroneHybrid(self, 17, 16, self.hybrid_drone_map)
+            self.drone_group.add(drone)
+            self.drone_list.append(drone)
+            drone = DroneHybrid(self, 15, 17, self.hybrid_drone_map)
+            self.drone_group.add(drone)
+            self.drone_list.append(drone)
+            drone = DroneHybrid(self, 16, 17, self.hybrid_drone_map)
+            self.drone_group.add(drone)
+            self.drone_list.append(drone)"""
+            drone = DroneHybrid(self, 17, 17, self.hybrid_drone_map)
+            self.drone_group.add(drone)
+            self.drone_list.append(drone)
+            """drone = DroneHybrid(self, 15, 18, self.hybrid_drone_map)
+            self.drone_group.add(drone)
+            self.drone_list.append(drone)"""
+            drone = DroneHybrid(self, 16, 18, self.hybrid_drone_map)
+            self.drone_group.add(drone)
+            self.drone_list.append(drone)
 
     def create_sectors(self):
         sector_id = 1
@@ -399,10 +421,9 @@ class Simulation:
             return True
 
         # All Population tiles dead
+        end = True
         for population_tile in self.population_list:
-            if population_tile.integrity == 0:
-                end = True
-            else:
+            if population_tile.integrity != 0:
                 end = False
 
         if end:
