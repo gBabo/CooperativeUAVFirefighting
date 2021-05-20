@@ -97,6 +97,10 @@ class Simulation:
                     print("FIRE! in sector " + str(sector.sectorID))
                     self.hybrid_drone_sectors_on_fire.append(sector)
 
+                if not sector.onFire:
+                    #remove sector from drone list
+                    self.hybrid_drone_sectors_on_fire.remove(sector)
+
             self.update()
             self.draw()
             self.reset_keys()
