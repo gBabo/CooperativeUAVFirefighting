@@ -18,10 +18,6 @@ class Sector:
                 self.sectorTiles.append(Point(x, y))
 
     def calculate_fire_alert(self, wildFireList):
-        # skip calculating probability if we already know the sector is on fire
-        if self.sectorOnFire:
-            return False
-
         finalProbability = 0
         totalFires = 0
         for wildFire in wildFireList:
@@ -31,6 +27,16 @@ class Sector:
                     finalProbability += self.probabilityPerFireTile
 
         # print("Sector ", str(self.sectorID), " is seeing ", totalFires," fire tiles.")
+
+        # if the sector finds no fires in its tiles
+        if not totalFires:
+            self.sectorOnFire = False
+            return False
+
+        # if we already know the sector is on fire
+        # we only alert the first occurence of finding fire
+        if self.sectorOnFire:
+            return False
 
         # random.random() return a number in interval [0,1[
         self.sectorOnFire = random.random() < finalProbability
