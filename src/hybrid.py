@@ -39,12 +39,12 @@ def direction_action(fromPoint, toPoint):
 
 
 class DroneHybrid(Drone):
-    def __init__(self, simulation, x, y, tile_dict: dict):
-        super().__init__(simulation, x, y)
+    def __init__(self, simulation, x, y, identification, tile_dict: dict):
+        super().__init__(simulation, x, y, identification)
         self.map = tile_dict
-        self.intention = {"Desire": None, "Point": None}
+        self.intention = {"Desire": None, "Point": Point(-1, -1)}
         self.sectors_on_fire = simulation.hybrid_drone_sectors_on_fire
-        self.points_on_fire = simulation.hybrid_drone_points_on_fire
+        self.drones_targets = []
         self.target_sector = None
         self.visited_sector_tiles = []
         self.plan_queue = []
@@ -54,7 +54,7 @@ class DroneHybrid(Drone):
         desire = self.intention.get("Desire")
         tile_class = self.map[self.point].__class__
 
-        if desire == Desire.Recharge: return tile_class == Population
+        if desire == Desire.Recharge and self.battery < 75: return tile_class == Population
         if self.battery < 75 and tile_class == Population:
             return True
         elif self.water_capacity < 75 and (tile_class == Population or tile_class == Water):
@@ -74,8 +74,17 @@ class DroneHybrid(Drone):
             self.execute(Action.Release_Water)
 
     def agent_decision(self) -> None:
-        self.update_beliefs()
+        if self.inactive:
+            self.recover_inactive()
+            # Reset State after full recovery
+            if not self.inactive:
+                self.target_sector = None
+                self.visited_sector_tiles = []
+                self.plan_queue = []
+                self.intention = {"Desire": None, "Point": Point(-1, -1)}
+                self.last_action = None
 
+        self.update_beliefs()
         if self.can_reactive_decision(): self.simple_reactive_action()
         elif len(self.plan_queue) > 0 and not self.intention_success() and not self.impossible_intention():
             action = self.plan_queue.pop(0)
@@ -94,6 +103,9 @@ class DroneHybrid(Drone):
     def update_beliefs(self):
         self.fov = self.calculate_fov()
         sec_not_fire = True
+        self.drones_targets = [pair.get("Point") for pair in self.simulation.hybrid_drone_intention_points
+                               if self.id != pair.get("ID")]
+
         for point in self.fov:
             for sec in self.simulation.sector_list:
                 if sec == self.target_sector: sec_not_fire = False
@@ -128,11 +140,15 @@ class DroneHybrid(Drone):
         if Desire.Recharge in desires:
             self.intention = {"Desire": Desire.Recharge,
                               "Point": self.point.closest_point_from_tiles(
-                                  [tile for tile in self.map.values() if tile.__class__ == Population])}
+                                  [tile for tile in self.map.values()
+                                   if tile.__class__ == Population
+                                   and tile.point not in self.drones_targets])}
         elif Desire.Refuel in desires:
             self.intention = {"Desire": Desire.Refuel,
                               "Point": self.point.closest_point_from_tiles(
-                                  [tile for tile in self.map.values() if tile.__class__ in [Population, Water]])}
+                                  [tile for tile in self.map.values()
+                                   if tile.__class__ in [Population, Water]
+                                   and tile.point not in self.drones_targets])}
         elif Desire.Put_Out_Sector in desires:
             point = self.most_interest_point()
             if point == Point(-1, -1):
@@ -148,8 +164,9 @@ class DroneHybrid(Drone):
                 point = (point, p2)[self.point.distanceTo(p2) < self.point.distanceTo(point)]
                 self.target_sector = (self.target_sector, sec)[self.point.distanceTo(p2) < self.point.distanceTo(point)]
 
+            tiles = [point for point in self.target_sector.sectorTiles if point not in self.drones_targets]
             self.intention = {"Desire": Desire.Move_to_Sector,
-                              "Point": self.point.closest_point_from_points(self.target_sector.sectorTiles)}
+                              "Point": self.point.closest_point_from_points(tiles)}
         else:
             point = random.choice([p for p in self.fov if p != self.point])
             self.intention = {"Desire": Desire.Find_Fire, "Point": point}
@@ -186,7 +203,7 @@ class DroneHybrid(Drone):
             self.plan_queue.append(Action.Refuel)
 
         print(desire)
-        print(self.plan_queue)
+        # print(self.plan_queue)
 
     def build_path_plan(self, start: Point, dest: Point):
         path = print_path_point(start.find_path_bfs_from(dest, self.map))
@@ -266,29 +283,26 @@ class DroneHybrid(Drone):
     def get_maximized_dists_point(self, points: List[Point]) -> Point:
         # filtered by sector
         drones = self.drone_positions_list()
-        if not drones: return points[0]
-
         point = points[0]
         sum_max = sum([point.distanceTo(d) for d in drones])
         for i in range(1, len(points)):
             dists = [points[i].distanceTo(d) for d in drones]
             point = (point, points[i])[sum(dists) > sum_max]
             sum_max = (sum_max, sum(dists))[sum(dists) > sum_max]
-            print(point)
-            print(dists)
-            print(sum_max)
-        print(point)
         return point
 
     def most_interest_point(self) -> Point:
+        if self.target_sector is None: return Point(-1, -1)
         if self.point not in self.visited_sector_tiles:
             self.visited_sector_tiles.append(self.point)
-        non_visited = [p for p in self.fov if p not in self.visited_sector_tiles]
+        non_visited = [p for p in self.fov
+                       if p not in self.visited_sector_tiles
+                       and p not in self.drones_targets]
+
         # filtered by sector and fire
         on_fire = [p for p in non_visited if self.map[p].on_fire and p in self.target_sector.sectorTiles]
         not_on_fire = [p for p in non_visited if p in self.target_sector.sectorTiles]
         interests = (not_on_fire, on_fire)[len(on_fire) > 0]
-        print(interests)
         if not interests: return Point(-1, -1)
 
         # filtered by priority

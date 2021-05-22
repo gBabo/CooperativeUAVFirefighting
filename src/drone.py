@@ -10,8 +10,9 @@ from util import Direction
 
 
 class Drone(pygame.sprite.Sprite, ABC):
-    def __init__(self, simulation, x, y):
+    def __init__(self, simulation, x, y, identification):
         super().__init__()
+        self.id = identification
         self.simulation = simulation
         self.image = pygame.Surface((DRONESIZE, DRONESIZE))
         self.image.fill(YELLOW)
@@ -21,16 +22,18 @@ class Drone(pygame.sprite.Sprite, ABC):
             [int((self.point.x * TILESIZE) + TILE_MARGIN_X), int((self.point.y * TILESIZE) + TILE_MARGIN_Y)]
         self.battery = BATTERY
         self.water_capacity = WATERCAPACITY
+        self.inactive = False
         self.fov = self.calculate_fov()
 
     def recharge(self) -> None:
-        print(f"Had {self.battery}")
+        print(f"{self.id}: Had {self.battery}")
         self.battery = BATTERY
-        print(f"Recharged {self.battery}")
+        print(f"{self.id}: Recharged {self.battery}")
         return
 
     def refuel(self) -> None:
         self.water_capacity = WATERCAPACITY
+        print(f"{self.id}: Refueled")
         return
 
     def release_water(self) -> None:
@@ -38,7 +41,6 @@ class Drone(pygame.sprite.Sprite, ABC):
 
     def spend_energy(self) -> None:
         self.battery -= MOVEBATTERYCOST
-        print(self.battery)
 
     def move(self, direction) -> None:
         if direction == -1:
@@ -93,6 +95,7 @@ class Drone(pygame.sprite.Sprite, ABC):
             self.release_water()
             tile.fire_intensity -= 5
             tile.wet = True
+            print(f"{self.id}: Released Water")
 
         self.spend_energy()
         self.is_dead()
@@ -100,8 +103,16 @@ class Drone(pygame.sprite.Sprite, ABC):
 
     def is_dead(self):
         if self.battery <= 0:
-            self.simulation.drone_list.remove(self)
-            self.kill()
+            self.inactive = True
+            self.battery = 0
+
+    def recover_inactive(self):
+        if self.battery >= BATTERY:
+            self.battery = (self.battery, BATTERY)[self.battery > BATTERY]
+            self.inactive = False
+        if self.inactive:
+            self.battery += BATTERY/5
+            print(f"{self.id}: In Recovery {self.battery}")
 
     def target_moving(self) -> None:
         def give_directions(ps: list) -> list:
@@ -182,16 +193,13 @@ class Drone(pygame.sprite.Sprite, ABC):
 
 
 class DroneNaive(Drone):
-    def __init__(self, simulation, x, y):
-        super().__init__(simulation, x, y)
+    def __init__(self, simulation, x, y, identification):
+        super().__init__(simulation, x, y, identification)
 
     def agent_decision(self):
-        if self.simulation.tile_dict[self.point].on_fire and self.water_capacity > 0:
-            self.put_out_fire()
-
-        elif self.simulation.tile_dict[self.point].__class__ == Population and self.needs_recharge():
-            self.recharge()
-
+        if self.inactive: self.recover_inactive()
+        elif self.simulation.tile_dict[self.point].on_fire and self.water_capacity > 0: self.put_out_fire()
+        elif self.simulation.tile_dict[self.point].__class__ == Population and self.needs_recharge(): self.recharge()
         elif (self.simulation.tile_dict[self.point].__class__ == Water or
               self.simulation.tile_dict[self.point].__class__ == Population) and self.needs_refuel():
             self.refuel()
@@ -206,13 +214,12 @@ class DroneNaive(Drone):
 
 
 class DroneReactive(Drone):
-    def __init__(self, simulation, x, y):
-        super().__init__(simulation, x, y)
+    def __init__(self, simulation, x, y, identification):
+        super().__init__(simulation, x, y, identification)
 
     def agent_decision(self) -> None:
-        if self.simulation.tile_dict[self.point].on_fire and not self.water_capacity == 0:
-            self.put_out_fire()
-
+        if self.inactive: self.recover_inactive()
+        elif self.simulation.tile_dict[self.point].on_fire and not self.water_capacity == 0: self.put_out_fire()
         elif self.simulation.tile_dict[self.point].__class__ == Population:
             if self.needs_recharge():
                 self.recharge()
@@ -220,7 +227,6 @@ class DroneReactive(Drone):
                 self.refuel()
             else:
                 self.target_moving()
-
         elif self.simulation.tile_dict[self.point].__class__ == Water:
             if self.needs_refuel():
                 self.refuel()

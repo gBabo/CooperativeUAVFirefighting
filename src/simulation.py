@@ -33,7 +33,7 @@ class Simulation:
         self.population_list: List[Tile] = []
 
         self.hybrid_drone_sectors_on_fire: List[Sector] = []
-        self.hybrid_drone_points_on_fire: List[Point] = []
+        self.hybrid_drone_intention_points: List[Point] = []
 
         self.fire_image = pygame.Surface((TILESIZE/2, TILESIZE/2))
 
@@ -100,6 +100,10 @@ class Simulation:
 
             for agent in self.drone_list:
                 agent.agent_decision()
+                if self.create_hybrid_drone:
+                    self.hybrid_drone_intention_points = [{"ID": d.id,
+                                                           "Point": d.intention.get("Point")}
+                                                          for d in self.drone_list]
 
             self.update()
             self.draw()
@@ -176,77 +180,83 @@ class Simulation:
                 self.hybrid_drone_map[tile.point] = tile
 
     def create_naive_drones(self):
-        drone = DroneNaive(self, 16, 16)
+        drone = DroneNaive(self, 3, 4, 1)
         self.drone_group.add(drone)
         self.drone_list.append(drone)
         if not self.debug_mode:
-            drone = DroneNaive(self, 17, 16)
+            drone = DroneNaive(self, 5, 6, 2)
             self.drone_group.add(drone)
             self.drone_list.append(drone)
-            drone = DroneNaive(self, 18, 16)
+            drone = DroneNaive(self, 18, 2, 3)
             self.drone_group.add(drone)
             self.drone_list.append(drone)
-            drone = DroneNaive(self, 16, 17)
+            drone = DroneNaive(self, 20, 4, 4)
             self.drone_group.add(drone)
             self.drone_list.append(drone)
-            drone = DroneNaive(self, 17, 17)
+            drone = DroneNaive(self, 24, 18, 5)
             self.drone_group.add(drone)
             self.drone_list.append(drone)
-            drone = DroneNaive(self, 18, 17)
+            drone = DroneNaive(self, 26, 20, 6)
+            self.drone_group.add(drone)
+            self.drone_list.append(drone)
+            drone = DroneNaive(self, 11, 27, 7)
+            self.drone_group.add(drone)
+            self.drone_list.append(drone)
+            drone = DroneNaive(self, 13, 29, 8)
             self.drone_group.add(drone)
             self.drone_list.append(drone)
 
     def create_reactive_drones(self):
-        drone = DroneReactive(self, 16, 16)
+        drone = DroneReactive(self, 3, 4, 1)
         self.drone_group.add(drone)
         self.drone_list.append(drone)
         if not self.debug_mode:
-            drone = DroneReactive(self, 15, 16)
+            drone = DroneReactive(self, 5, 6, 2)
             self.drone_group.add(drone)
             self.drone_list.append(drone)
-            drone = DroneReactive(self, 17, 16)
+            drone = DroneReactive(self, 18, 2, 3)
             self.drone_group.add(drone)
             self.drone_list.append(drone)
-            drone = DroneReactive(self, 15, 17)
+            drone = DroneReactive(self, 20, 4, 4)
             self.drone_group.add(drone)
             self.drone_list.append(drone)
-            drone = DroneReactive(self, 16, 17)
+            drone = DroneReactive(self, 24, 18, 5)
             self.drone_group.add(drone)
             self.drone_list.append(drone)
-            drone = DroneReactive(self, 17, 17)
+            drone = DroneReactive(self, 26, 20, 6)
             self.drone_group.add(drone)
             self.drone_list.append(drone)
-            drone = DroneReactive(self, 15, 18)
+            drone = DroneReactive(self, 11, 27, 7)
             self.drone_group.add(drone)
             self.drone_list.append(drone)
-            drone = DroneReactive(self, 16, 18)
+            drone = DroneReactive(self, 13, 29, 8)
             self.drone_group.add(drone)
             self.drone_list.append(drone)
 
     def create_hybrid_drones(self):
-        drone = DroneHybrid(self, 16, 16, self.hybrid_drone_map)
+        drone = DroneHybrid(self, 3, 4, 1, self.hybrid_drone_map)
         self.drone_group.add(drone)
         self.drone_list.append(drone)
         if not self.debug_mode:
-            """drone = DroneHybrid(self, 15, 16, self.hybrid_drone_map)
+            drone = DroneHybrid(self, 5, 6, 2, self.hybrid_drone_map)
             self.drone_group.add(drone)
             self.drone_list.append(drone)
-            drone = DroneHybrid(self, 17, 16, self.hybrid_drone_map)
+            drone = DroneHybrid(self, 18, 2, 3, self.hybrid_drone_map)
             self.drone_group.add(drone)
             self.drone_list.append(drone)
-            drone = DroneHybrid(self, 15, 17, self.hybrid_drone_map)
+            drone = DroneHybrid(self, 20, 4, 4, self.hybrid_drone_map)
             self.drone_group.add(drone)
             self.drone_list.append(drone)
-            drone = DroneHybrid(self, 16, 17, self.hybrid_drone_map)
-            self.drone_group.add(drone)
-            self.drone_list.append(drone)"""
-            drone = DroneHybrid(self, 17, 17, self.hybrid_drone_map)
+            drone = DroneHybrid(self, 24, 18, 5, self.hybrid_drone_map)
             self.drone_group.add(drone)
             self.drone_list.append(drone)
-            """drone = DroneHybrid(self, 15, 18, self.hybrid_drone_map)
+            drone = DroneHybrid(self, 26, 20, 6, self.hybrid_drone_map)
             self.drone_group.add(drone)
-            self.drone_list.append(drone)"""
-            drone = DroneHybrid(self, 16, 18, self.hybrid_drone_map)
+            self.drone_list.append(drone)
+            drone = DroneHybrid(self, 11, 27, 7, self.hybrid_drone_map)
+            self.drone_group.add(drone)
+            self.drone_list.append(drone)
+            drone = DroneHybrid(self, 13, 29, 8, self.hybrid_drone_map)
             self.drone_group.add(drone)
             self.drone_list.append(drone)
 
@@ -358,8 +368,8 @@ class Simulation:
                 color = BLUE
             tile.image.fill(color)
 
-            if tile.on_fire or tile.integrity == 0:
-                color = (ORANGE, BLACK)[tile.integrity == 0]
+            if tile.on_fire or tile.integrity <= 0:
+                color = (ORANGE, BLACK)[tile.integrity <= 0]
                 self.fire_image.fill(color)
                 tile.image.blit(self.fire_image, [TILESIZE/4, TILESIZE/4])
 
@@ -372,15 +382,12 @@ class Simulation:
 
         while len(q) != 0:
             tile = q.pop()
-            priority = tile.priority - 1
+            priority = tile.priority - 2
             for n in get_neighbours(tile, self.tile_dict):
                 if n.priority >= priority or n in q:
                     continue
                 n.priority = priority
                 q.append(n)
-
-        """for tile in self.tile_dict.values():
-            print(tile)"""
 
     # initiate and create things
 

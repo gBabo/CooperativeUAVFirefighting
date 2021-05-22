@@ -57,13 +57,15 @@ def update_wildfire(wild: Wildfire) -> None:
         decreased = tile.integrity - tile.fire_intensity
         tile.integrity = (MIN_INTEGRITY, decreased)[decreased > MIN_INTEGRITY]
 
-        if tile.integrity <= 0:
-            tile.fire_intensity = MIN_FIRE
-            tile.on_fire = False
-            wild.tiles_burned.append(tile)
+        if tile.integrity == 0:
+            decreased = tile.fire_intensity - DECAY
+            tile.fire_intensity = (MIN_FIRE, decreased)[decreased > MIN_FIRE]
         elif decreased > 0 and tile.fire_intensity < MAX_FIRE:
             tile.fire_intensity += 1
 
+        if tile.fire_intensity <= 0:
+            wild.tiles_burned.append(tile)
+            tile.on_fire = False
     wild.tiles = [tile for tile in wild.tiles if tile.on_fire]
 
 
@@ -74,7 +76,7 @@ def expand_wildfire(wild: Wildfire, tile_dict: dict, wind: Wind) -> None:
     new_tiles = []
 
     for tile in wild.tiles:
-        if random.randint(1, 10) <= tile.fire_intensity:
+        if random.randint(1, 15) <= tile.fire_intensity:
             choice = random.choice(direct)
             if choice == Direction.North:
                 if tile.point.y == 0:
