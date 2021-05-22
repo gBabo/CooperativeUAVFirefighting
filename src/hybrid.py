@@ -141,6 +141,7 @@ class DroneHybrid(Drone):
 
         # Filtering Options
         if Desire.Recharge in desires:
+            self.simulation.drones_recharge += 1
             self.intention = {"Desire": Desire.Recharge,
                               "Point": self.point.closest_point_from_tiles(
                                   [tile for tile in self.map.values()
@@ -186,7 +187,10 @@ class DroneHybrid(Drone):
         desire = self.intention.get("Desire")
 
         if desire == Desire.Recharge:
-            return self.last_action == Action.Recharge
+            if self.last_action == Action.Recharge:
+                self.simulation.drones_recharge -= 1
+                return True
+            return False
         elif desire == Desire.Refuel:
             return self.last_action == Action.Refuel
         elif desire == Desire.Move_to_Sector or desire == Desire.Put_Out_Sector:
@@ -270,7 +274,8 @@ class DroneHybrid(Drone):
     def needs_recharge(self) -> bool:
         populations = [tile for tile in self.map.values() if tile.__class__ == Population]
         closest_recharge_point = self.point.closest_point_from_tiles(populations)
-        return (number_of_steps_from_x_to_y(self.point, closest_recharge_point) + 8) * MOVEBATTERYCOST >= self.battery
+        return (number_of_steps_from_x_to_y(self.point, closest_recharge_point) + DRONESIZE - self.simulation.drones_recharge + 1) \
+            * MOVEBATTERYCOST >= self.battery
 
     def sector_on_fire(self) -> bool:
         return self.sectors_on_fire != []

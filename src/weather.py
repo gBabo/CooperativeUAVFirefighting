@@ -48,7 +48,7 @@ class Wildfire:
     def tile_on_fire_priority(self):
         priority_value_on_fire = 0
         for tile_on_fire in self.tiles:
-            priority_value_on_fire += tile_on_fire.priority
+            priority_value_on_fire += tile_on_fire.priority + tile_on_fire.integrity_percentage()
         return priority_value_on_fire
 
 

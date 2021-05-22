@@ -22,6 +22,9 @@ class Tile(pygame.sprite.Sprite, ABC):
         self.wet = False
         self.rect.center = [int((x * TILESIZE) + TILE_MARGIN_X), int((y * TILESIZE) + TILE_MARGIN_Y)]
 
+    def integrity_percentage(self, total: int = 100) -> int:
+        return self.integrity // total
+
     def __repr__(self):
         return f"Class:{self.__class__}, {self.point}, Priority:{self.priority}, Integrity:{self.integrity}, On Fire:{self.on_fire}, Fire Intensity:{self.fire_intensity}"
 
@@ -32,6 +35,9 @@ class Population(Tile):
         self.integrity = 1000
         self.priority = 10
 
+    def integrity_percentage(self, total: int = 1000) -> int:
+        return super().integrity_percentage(total)
+
 
 class Forest(Tile):
     def __init__(self, simulation, x, y):
@@ -39,12 +45,18 @@ class Forest(Tile):
         self.integrity = 500
         self.priority = 1
 
+    def integrity_percentage(self, total: int = 500) -> int:
+        return super().integrity_percentage(total)
+
 
 class Road(Tile):
     def __init__(self, simulation, x, y):
         super().__init__(simulation, x, y, LIGHTGREY)
         self.integrity = 100
         self.priority = 5
+
+    def integrity_percentage(self, total: int = 100) -> int:
+        return super().integrity_percentage(total)
 
 
 class Water(Tile):

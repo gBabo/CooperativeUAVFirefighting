@@ -30,6 +30,7 @@ class Simulation:
         self.wildfire_list: List[Wildfire] = []
 
         self.sector_list: List[Sector] = []
+        self.drones_recharge = 0
         self.population_list: List[Tile] = []
 
         self.hybrid_drone_sectors_on_fire: List[Sector] = []
@@ -303,7 +304,7 @@ class Simulation:
 
         while len(q) != 0:
             tile = q.pop()
-            priority = tile.priority - 2
+            priority = tile.priority - 1
             for n in get_neighbours(tile, self.tile_dict):
                 if n.priority >= priority or n in q:
                     continue
