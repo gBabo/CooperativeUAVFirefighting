@@ -1,3 +1,4 @@
+from functools import reduce
 from typing import List
 
 from drone import Drone
@@ -301,16 +302,9 @@ class DroneHybrid(Drone):
                 break
         return target_sector
 
-    def get_maximized_dists_point(self, points: List[Point]) -> Point:
-        # filtered by sector
+    def get_sum_dist_point(self, point: Point) -> int:
         drones = self.drone_positions_list()
-        point = points[0]
-        sum_max = sum([point.distanceTo(d) for d in drones])
-        for i in range(1, len(points)):
-            dists = [points[i].distanceTo(d) for d in drones]
-            point = (point, points[i])[sum(dists) > sum_max]
-            sum_max = (sum_max, sum(dists))[sum(dists) > sum_max]
-        return point
+        return sum([point.distanceTo(d) for d in drones if d in self.target_sector.sectorTiles])
 
     def most_interest_point(self) -> Point:
         if self.target_sector is None: return Point(-1, -1)
@@ -330,15 +324,21 @@ class DroneHybrid(Drone):
         interests = (not_on_fire, on_fire)[len(on_fire) > 0]
         if not interests: return Point(-1, -1)
 
-        # filtered by priority
-        max_priority = self.map[interests[0]].priority
-        for p in interests:
-            max_priority = (max_priority, self.map[p].priority)[self.map[p].priority > max_priority]
-        max_points = [p for p in interests if self.map[p].priority == max_priority]
-        if len(max_points) == 1: return max_points[0]
+        points_struct_list = [(p, self.map[p].priority, self.get_sum_dist_point(p))
+                              for p in interests]
+        points_ordered_priority = [point_struct[0] for point_struct in
+                                   sorted(points_struct_list, key=lambda x: x[1])]
+        points_ordered_sum_dist = [point_struct[0] for point_struct in
+                                   sorted(points_struct_list, key=lambda x: x[2])]
+        points_total_value = [(p, points_ordered_priority.index(p) + points_ordered_sum_dist.index(p))
+                              for (p, _, _) in points_struct_list]
 
-        # filtered by max distance to other drones in sector
-        return self.get_maximized_dists_point(max_points)
+        point = points_total_value[0][0]
+        value = points_total_value[0][1]
+        for ps in points_total_value:
+            point = (point, ps[0])[ps[1] > value]
+            value = (value, ps[1])[ps[1] > value]
+        return point
 
     def reactive_behaviour(self) -> None:
         if self.map[self.point].on_fire:

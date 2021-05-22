@@ -1,3 +1,5 @@
+import random
+
 from drone import *
 from map2 import *
 from hybrid import DroneHybrid
@@ -234,29 +236,9 @@ class Simulation:
             self.drone_list.append(drone)
 
     def create_hybrid_drones(self):
-        drone = DroneHybrid(self, 3, 4, 1, self.hybrid_drone_map)
-        self.drone_group.add(drone)
-        self.drone_list.append(drone)
-        if not self.debug_mode:
-            drone = DroneHybrid(self, 5, 6, 2, self.hybrid_drone_map)
-            self.drone_group.add(drone)
-            self.drone_list.append(drone)
-            drone = DroneHybrid(self, 18, 2, 3, self.hybrid_drone_map)
-            self.drone_group.add(drone)
-            self.drone_list.append(drone)
-            drone = DroneHybrid(self, 20, 4, 4, self.hybrid_drone_map)
-            self.drone_group.add(drone)
-            self.drone_list.append(drone)
-            drone = DroneHybrid(self, 24, 18, 5, self.hybrid_drone_map)
-            self.drone_group.add(drone)
-            self.drone_list.append(drone)
-            drone = DroneHybrid(self, 26, 20, 6, self.hybrid_drone_map)
-            self.drone_group.add(drone)
-            self.drone_list.append(drone)
-            drone = DroneHybrid(self, 11, 27, 7, self.hybrid_drone_map)
-            self.drone_group.add(drone)
-            self.drone_list.append(drone)
-            drone = DroneHybrid(self, 13, 29, 8, self.hybrid_drone_map)
+        for sec in self.sector_list:
+            point = random.choice(sec.sectorTiles)
+            drone = DroneHybrid(self, point.x, point.y, sec.sectorID, self.hybrid_drone_map)
             self.drone_group.add(drone)
             self.drone_list.append(drone)
 
