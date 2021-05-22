@@ -339,7 +339,7 @@ class Simulation:
         priority_value_burned = 0
         end = True
         for wildfire in self.wildfire_list:
-            priority_value_burned += wildfire.tile_on_fire_priority()
+            priority_value_burned += wildfire.tile_on_fire_priority(self.tile_dict)
             priority_value_burned += wildfire.tile_burned_priority()
             if len(wildfire.tiles) != 0:
                 end = False
@@ -374,7 +374,7 @@ class Simulation:
         for wildfire in self.wildfire_list:
             print("-----------------------", wildfire)
             # priority
-            priority_burned = wildfire.tile_on_fire_priority() + wildfire.tile_burned_priority()
+            priority_burned = wildfire.tile_on_fire_priority(self.tile_dict) + wildfire.tile_burned_priority()
             total_priority_burned += priority_burned
             print("Priority On Fire and Burned:", priority_burned)
             # spread

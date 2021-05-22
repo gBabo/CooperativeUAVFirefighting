@@ -45,10 +45,11 @@ class Wildfire:
             priority_value_burned += tile_burned.priority
         return priority_value_burned
 
-    def tile_on_fire_priority(self):
+    def tile_on_fire_priority(self, tile_dict: dict):
         priority_value_on_fire = 0
-        for tile_on_fire in self.tiles:
-            priority_value_on_fire += tile_on_fire.priority + tile_on_fire.integrity_percentage()
+        for point in self.points:
+            if tile_dict[point] not in self.tiles_burned:
+                priority_value_on_fire += tile_dict[point].priority * (1 - tile_dict[point].integrity_percentage())
         return priority_value_on_fire
 
 

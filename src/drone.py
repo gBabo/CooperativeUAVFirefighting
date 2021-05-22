@@ -14,8 +14,7 @@ class Drone(pygame.sprite.Sprite, ABC):
         super().__init__()
         self.id = identification
         self.simulation = simulation
-        self.image = pygame.Surface((DRONESIZE, DRONESIZE))
-        self.image.fill(YELLOW)
+        self.image = pygame.image.load("drone.png")
         self.rect = self.image.get_rect()
         self.point = Point(x, y)
         self.rect.center = \

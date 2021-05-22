@@ -1,6 +1,3 @@
-from functools import reduce
-from typing import List
-
 from drone import Drone
 from settings import *
 from src.sector import Sector
@@ -170,7 +167,10 @@ class DroneHybrid(Drone):
             self.intention = {"Desire": Desire.Move_to_Sector,
                               "Point": self.point.closest_point_from_points(tiles)}
         else:
-            point = random.choice([p for p in self.fov if p != self.point])
+            all_points = [p for p in self.fov if p != self.point]
+            on_fire = [p for p in all_points if self.map[p].on_fire]
+            points = (all_points, on_fire)[len(on_fire) > 0]
+            point = random.choice(points)
             self.intention = {"Desire": Desire.Find_Fire, "Point": point}
 
     # plan generation and rebuild
@@ -274,7 +274,7 @@ class DroneHybrid(Drone):
     def needs_recharge(self) -> bool:
         populations = [tile for tile in self.map.values() if tile.__class__ == Population]
         closest_recharge_point = self.point.closest_point_from_tiles(populations)
-        return (number_of_steps_from_x_to_y(self.point, closest_recharge_point) + DRONESIZE - self.simulation.drones_recharge + 1) \
+        return (number_of_steps_from_x_to_y(self.point, closest_recharge_point) + DRONENUMBERS - self.simulation.drones_recharge + 4) \
             * MOVEBATTERYCOST >= self.battery
 
     def sector_on_fire(self) -> bool:
@@ -320,8 +320,7 @@ class DroneHybrid(Drone):
             self.visited_sector_tiles.append(self.point)
         non_visited = [p for p in self.fov
                        if p not in self.visited_sector_tiles
-                       and p not in self.drones_targets
-                       and self.map[p].__class__ != Water]
+                       and p not in self.drones_targets]
 
         # filtered by sector and fire
         on_fire = [p for p in non_visited if self.map[p].on_fire and p in self.target_sector.sectorTiles]
