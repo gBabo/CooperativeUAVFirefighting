@@ -1,5 +1,3 @@
-import random
-
 from drone import *
 from map2 import *
 from hybrid import DroneHybrid
@@ -59,11 +57,6 @@ class Simulation:
         # button and var that indicates to create hybrid coop drones
         self.naive_drone_button = None
         self.create_naive_drone = False
-
-        # button for debug mode
-        self.debug_button = None
-        self.debug_mode = False
-
         self.drone_not_chosen = True
 
     def simulation_loop(self):
@@ -156,9 +149,6 @@ class Simulation:
                     pygame.display.flip()
                 if self.step_next_button.is_over(mouse_position):
                     self.step_pause = False
-                if self.debug_button.is_over(mouse_position):
-                    self.debug_mode = not self.debug_mode
-                    print(self.debug_button.text + f": {self.debug_mode}")
 
     def reset_keys(self):
         self.UP_KEY, self.DOWN_KEY, self.START_KEY, self.BACK_KEY = False, False, False, False
@@ -182,56 +172,16 @@ class Simulation:
                 self.hybrid_drone_map[tile.point] = tile
 
     def create_naive_drones(self):
-        drone = DroneNaive(self, 3, 4, 1)
-        self.drone_group.add(drone)
-        self.drone_list.append(drone)
-        if not self.debug_mode:
-            drone = DroneNaive(self, 5, 6, 2)
-            self.drone_group.add(drone)
-            self.drone_list.append(drone)
-            drone = DroneNaive(self, 18, 2, 3)
-            self.drone_group.add(drone)
-            self.drone_list.append(drone)
-            drone = DroneNaive(self, 20, 4, 4)
-            self.drone_group.add(drone)
-            self.drone_list.append(drone)
-            drone = DroneNaive(self, 24, 18, 5)
-            self.drone_group.add(drone)
-            self.drone_list.append(drone)
-            drone = DroneNaive(self, 26, 20, 6)
-            self.drone_group.add(drone)
-            self.drone_list.append(drone)
-            drone = DroneNaive(self, 11, 27, 7)
-            self.drone_group.add(drone)
-            self.drone_list.append(drone)
-            drone = DroneNaive(self, 13, 29, 8)
+        for sec in self.sector_list:
+            point = random.choice(sec.sectorTiles)
+            drone = DroneNaive(self, point.x, point.y, sec.sectorID)
             self.drone_group.add(drone)
             self.drone_list.append(drone)
 
     def create_reactive_drones(self):
-        drone = DroneReactive(self, 3, 4, 1)
-        self.drone_group.add(drone)
-        self.drone_list.append(drone)
-        if not self.debug_mode:
-            drone = DroneReactive(self, 5, 6, 2)
-            self.drone_group.add(drone)
-            self.drone_list.append(drone)
-            drone = DroneReactive(self, 18, 2, 3)
-            self.drone_group.add(drone)
-            self.drone_list.append(drone)
-            drone = DroneReactive(self, 20, 4, 4)
-            self.drone_group.add(drone)
-            self.drone_list.append(drone)
-            drone = DroneReactive(self, 24, 18, 5)
-            self.drone_group.add(drone)
-            self.drone_list.append(drone)
-            drone = DroneReactive(self, 26, 20, 6)
-            self.drone_group.add(drone)
-            self.drone_list.append(drone)
-            drone = DroneReactive(self, 11, 27, 7)
-            self.drone_group.add(drone)
-            self.drone_list.append(drone)
-            drone = DroneReactive(self, 13, 29, 8)
+        for sec in self.sector_list:
+            point = random.choice(sec.sectorTiles)
+            drone = DroneReactive(self, point.x, point.y, sec.sectorID)
             self.drone_group.add(drone)
             self.drone_list.append(drone)
 
@@ -254,31 +204,21 @@ class Simulation:
                 self.sector_list.append(sector)
 
     def create_wildfires(self):
-        if self.debug_mode:
-            point = Point(23, 18)
+        rng = random.randint(1, 3)
+        print(f"Wildfire count: {rng}")
+        for i in range(1, rng + 1):
+            lst = [x for x in self.tile_dict.values() if x.__class__ == Forest and x.fire_intensity == 0]
+            point = random.choice(lst).point
             fire = self.tile_dict[point]
-            fire.fire_intensity = 10
-            wild = Wildfire(1, point, 1)
+            fire.fire_intensity = 1
+            wild = Wildfire(i, point, 1)
             fire.on_fire = True
             wild.add_fire(fire)
             self.wildfire_list.append(wild)
-        else:
-            rng = random.randint(1, 3)
-            print(f"Wildfire count: {rng}")
-            for i in range(1, rng + 1):
-                lst = [x for x in self.tile_dict.values() if x.__class__ == Forest and x.fire_intensity == 0]
-                point = random.choice(lst).point
-                fire = self.tile_dict[point]
-                fire.fire_intensity = 1
-                wild = Wildfire(i, point, 1)
-                fire.on_fire = True
-                wild.add_fire(fire)
-                self.wildfire_list.append(wild)
 
     def create_buttons(self):
         self.step_button = Button(WHITE, 40, 40, 180, 30, 'step:' + str(self.step))
         self.step_next_button = Button(WHITE, 40, 80, 180, 30, 'next step')
-        self.debug_button = Button(WHITE, 40, 160, 180, 30, 'Debug Mode')
 
         self.naive_drone_button = Button(WHITE, 250, 40, 160, 30, 'Start with naive drones')
         self.reactive_drone_button = Button(WHITE, 425, 40, 160, 30, 'Start with reactive drones')
@@ -326,7 +266,6 @@ class Simulation:
     def draw_buttons(self):
         self.step_button.draw(self.screen)
         self.step_next_button.draw(self.screen)
-        self.debug_button.draw(self.screen)
         self.reactive_drone_button.draw(self.screen)
         self.hybrid_drone_button.draw(self.screen)
         self.naive_drone_button.draw(self.screen)
