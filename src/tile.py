@@ -29,21 +29,21 @@ class Tile(pygame.sprite.Sprite, ABC):
 class Population(Tile):
     def __init__(self, simulation, x, y):
         super().__init__(simulation, x, y, RED)
-        self.integrity = 100
+        self.integrity = 1000
         self.priority = 10
 
 
 class Forest(Tile):
     def __init__(self, simulation, x, y):
         super().__init__(simulation, x, y, GREEN)
-        self.integrity = 50
+        self.integrity = 500
         self.priority = 1
 
 
 class Road(Tile):
     def __init__(self, simulation, x, y):
         super().__init__(simulation, x, y, LIGHTGREY)
-        self.integrity = 10
+        self.integrity = 100
         self.priority = 5
 
 

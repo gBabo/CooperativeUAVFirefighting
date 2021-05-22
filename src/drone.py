@@ -19,12 +19,14 @@ class Drone(pygame.sprite.Sprite, ABC):
         self.point = Point(x, y)
         self.rect.center = \
             [int((self.point.x * TILESIZE) + TILE_MARGIN_X), int((self.point.y * TILESIZE) + TILE_MARGIN_Y)]
-        self.battery = WATERCAPACITY
-        self.water_capacity = BATTERY
+        self.battery = BATTERY
+        self.water_capacity = WATERCAPACITY
         self.fov = self.calculate_fov()
 
     def recharge(self) -> None:
+        print(f"Had {self.battery}")
         self.battery = BATTERY
+        print(f"Recharged {self.battery}")
         return
 
     def refuel(self) -> None:
@@ -36,6 +38,7 @@ class Drone(pygame.sprite.Sprite, ABC):
 
     def spend_energy(self) -> None:
         self.battery -= MOVEBATTERYCOST
+        print(self.battery)
 
     def move(self, direction) -> None:
         if direction == -1:

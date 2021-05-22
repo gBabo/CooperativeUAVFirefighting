@@ -45,6 +45,7 @@ class DroneHybrid(Drone):
         self.intention = {"Desire": None, "Point": None}
         self.sectors_on_fire = simulation.hybrid_drone_sectors_on_fire
         self.points_on_fire = simulation.hybrid_drone_points_on_fire
+        self.target_sector = None
         self.visited_sector_tiles = []
         self.plan_queue = []
         self.last_action = None
@@ -76,7 +77,7 @@ class DroneHybrid(Drone):
         self.update_beliefs()
 
         if self.can_reactive_decision(): self.simple_reactive_action()
-        elif len(self.plan_queue) > 0 and not self.intention_success():
+        elif len(self.plan_queue) > 0 and not self.intention_success() and not self.impossible_intention():
             action = self.plan_queue.pop(0)
             if self.is_plan_sound(action):
                 self.execute(action)
@@ -92,12 +93,15 @@ class DroneHybrid(Drone):
 
     def update_beliefs(self):
         self.fov = self.calculate_fov()
+        sec_not_fire = True
         for point in self.fov:
-            if self.map[point].on_fire and point not in self.points_on_fire:
-                self.points_on_fire.append(point)
-                for sec in self.simulation.sector_list:
-                    if point in sec.sectorTiles and sec not in self.sectors_on_fire:
-                        self.sectors_on_fire.append(sec)
+            for sec in self.simulation.sector_list:
+                if sec == self.target_sector: sec_not_fire = False
+                if self.map[point].on_fire and point in sec.sectorTiles and sec not in self.sectors_on_fire:
+                    self.sectors_on_fire.append(sec)
+
+        if sec_not_fire:
+            self.target_sector = None
 
     def deliberate(self) -> None:
         desires = []
@@ -108,10 +112,15 @@ class DroneHybrid(Drone):
         if self.needs_recharge():
             desires.append(Desire.Recharge)
         if self.sector_on_fire():
-            if self.point not in self.sectors_on_fire[0].sectorTiles:
-                desires.append(Desire.Move_to_Sector)
-            else:
+            on_sec = False
+            for sec in self.sectors_on_fire:
+                if self.point in sec.sectorTiles:
+                    on_sec = True
+
+            if on_sec:
                 desires.append(Desire.Put_Out_Sector)
+            else:
+                desires.append(Desire.Move_to_Sector)
         if not desires:
             desires.append(Desire.Find_Fire)
 
@@ -125,11 +134,22 @@ class DroneHybrid(Drone):
                               "Point": self.point.closest_point_from_tiles(
                                   [tile for tile in self.map.values() if tile.__class__ in [Population, Water]])}
         elif Desire.Put_Out_Sector in desires:
+            point = self.most_interest_point()
+            if point == Point(-1, -1):
+                point = random.choice([p for p in self.fov if p != self.point])
             self.intention = {"Desire": Desire.Put_Out_Sector,
-                              "Point": self.most_interest_point()}
+                              "Point": point}
         elif Desire.Move_to_Sector in desires:
+            point = self.point.closest_point_from_points(self.sectors_on_fire[0].sectorTiles)
+            self.target_sector = self.sectors_on_fire[0]
+
+            for sec in self.sectors_on_fire:
+                p2 = self.point.closest_point_from_points(sec.sectorTiles)
+                point = (point, p2)[self.point.distanceTo(p2) < self.point.distanceTo(point)]
+                self.target_sector = (self.target_sector, sec)[self.point.distanceTo(p2) < self.point.distanceTo(point)]
+
             self.intention = {"Desire": Desire.Move_to_Sector,
-                              "Point": self.point.closest_point_from_points(self.sectors_on_fire[0].sectorTiles)}
+                              "Point": self.point.closest_point_from_points(self.target_sector.sectorTiles)}
         else:
             point = random.choice([p for p in self.fov if p != self.point])
             self.intention = {"Desire": Desire.Find_Fire, "Point": point}
@@ -145,13 +165,16 @@ class DroneHybrid(Drone):
             return self.last_action == Action.Recharge
         elif desire == Desire.Refuel:
             return self.last_action == Action.Refuel
-        elif desire == Desire.Put_Out_Sector:
-            return False
-        elif desire == Desire.Move_to_Sector:
+        elif desire == Desire.Move_to_Sector or desire == Desire.Put_Out_Sector:
             return self.point == self.intention.get("Point")
         else:
             # find fire
             return [point for point in self.fov if self.map[point].on_fire] != []
+
+    def impossible_intention(self) -> bool:
+        if self.intention.get("Desire") == Desire.Move_to_Sector and self.target_sector is None:
+            return True
+        return False
 
     def build_plan(self):
         self.plan_queue = self.build_path_plan(self.point, self.intention.get("Point"))
@@ -223,7 +246,7 @@ class DroneHybrid(Drone):
     def needs_recharge(self) -> bool:
         populations = [tile for tile in self.map.values() if tile.__class__ == Population]
         closest_recharge_point = self.point.closest_point_from_tiles(populations)
-        return (number_of_steps_from_x_to_y(self.point, closest_recharge_point) + 1) * MOVEBATTERYCOST >= self.battery
+        return (number_of_steps_from_x_to_y(self.point, closest_recharge_point) + 8) * MOVEBATTERYCOST >= self.battery
 
     def sector_on_fire(self) -> bool:
         return self.sectors_on_fire != []
@@ -238,19 +261,22 @@ class DroneHybrid(Drone):
         return self.water_capacity < 100
 
     def drone_positions_list(self) -> list:
-        return [drone.point for drone in self.simulation.drone_list]
+        return [drone.point for drone in self.simulation.drone_list if drone != self]
 
     def get_maximized_dists_point(self, points: List[Point]) -> Point:
         # filtered by sector
-        drones_in_sector = [p for p in self.drone_positions_list() if p in self.sectors_on_fire[0].sectorTiles]
-        if not drones_in_sector: return points[0]
+        drones = self.drone_positions_list()
+        if not drones: return points[0]
 
         point = points[0]
-        sum_max = sum([point.distanceTo(d) for d in drones_in_sector])
+        sum_max = sum([point.distanceTo(d) for d in drones])
         for i in range(1, len(points)):
-            dists = [points[i].distanceTo(d) for d in drones_in_sector]
+            dists = [points[i].distanceTo(d) for d in drones]
             point = (point, points[i])[sum(dists) > sum_max]
             sum_max = (sum_max, sum(dists))[sum(dists) > sum_max]
+            print(point)
+            print(dists)
+            print(sum_max)
         print(point)
         return point
 
@@ -259,9 +285,11 @@ class DroneHybrid(Drone):
             self.visited_sector_tiles.append(self.point)
         non_visited = [p for p in self.fov if p not in self.visited_sector_tiles]
         # filtered by sector and fire
-        on_fire = [p for p in non_visited if self.map[p].on_fire and p in self.sectors_on_fire[0].sectorTiles]
-        not_on_fire = [p for p in non_visited if p in self.sectors_on_fire[0].sectorTiles]
+        on_fire = [p for p in non_visited if self.map[p].on_fire and p in self.target_sector.sectorTiles]
+        not_on_fire = [p for p in non_visited if p in self.target_sector.sectorTiles]
         interests = (not_on_fire, on_fire)[len(on_fire) > 0]
+        print(interests)
+        if not interests: return Point(-1, -1)
 
         # filtered by priority
         max_priority = self.map[interests[0]].priority
@@ -275,8 +303,6 @@ class DroneHybrid(Drone):
 
     def reactive_behaviour(self) -> None:
         if self.map[self.point].on_fire:
-            if self.point not in self.simulation.hybrid_drone_points_on_fire:
-                self.simulation.hybrid_drone_points_on_fire.append(self.point)
             self.release_water()
         elif self.map[self.point].__class__ == Population:
             if self.can_recharge():

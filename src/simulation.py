@@ -4,7 +4,6 @@ from hybrid import DroneHybrid
 from weather import *
 from sector import *
 from button import *
-from util import print_path_point
 import time
 
 
@@ -71,6 +70,7 @@ class Simulation:
             self.check_events()
         self.init_and_draw_drones()
         time.sleep(1)
+
         while self.playing:
             self.step_counter += 1
             while self.step and self.step_pause and self.playing and self.running:
@@ -84,8 +84,7 @@ class Simulation:
                     self.check_events()
                 break
             self.check_events()
-            for agent in self.drone_list:
-                agent.agent_decision()
+
             for wild in self.wildfire_list:
                 update_wildfire(wild)
                 expand_wildfire(wild, self.tile_dict, self.wind)
@@ -96,10 +95,11 @@ class Simulation:
                 if sector.calculate_fire_alert(self.wildfire_list):
                     print("FIRE! in sector " + str(sector.sectorID))
                     self.hybrid_drone_sectors_on_fire.append(sector)
-
                 if not sector.onFire and sector in self.hybrid_drone_sectors_on_fire:
-                    #remove sector from drone list
                     self.hybrid_drone_sectors_on_fire.remove(sector)
+
+            for agent in self.drone_list:
+                agent.agent_decision()
 
             self.update()
             self.draw()
