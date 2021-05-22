@@ -76,7 +76,7 @@ def expand_wildfire(wild: Wildfire, tile_dict: dict, wind: Wind) -> None:
     new_tiles = []
 
     for tile in wild.tiles:
-        if random.randint(1, 15) <= tile.fire_intensity:
+        if random.randint(1, 20) <= tile.fire_intensity:
             choice = random.choice(direct)
             if choice == Direction.North:
                 if tile.point.y == 0:
@@ -94,7 +94,7 @@ def expand_wildfire(wild: Wildfire, tile_dict: dict, wind: Wind) -> None:
                 if tile.point.x == 0:
                     continue
                 new = tile_dict[Point(tile.point.x - 1, tile.point.y)]
-            if new.wet or new.on_fire or new.integrity == 0:
+            if new.wet or new.on_fire or new.integrity <= 0:
                 continue
             if new.__class__ not in random.choices(types, weights=[0.3, 0.6, 0.1], k=1):
                 continue

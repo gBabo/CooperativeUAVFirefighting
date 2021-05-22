@@ -2,6 +2,7 @@ from typing import List
 
 from drone import Drone
 from settings import *
+from src.sector import Sector
 from util import *
 from tile import Population, Water
 
@@ -85,7 +86,8 @@ class DroneHybrid(Drone):
                 self.last_action = None
 
         self.update_beliefs()
-        if self.can_reactive_decision(): self.simple_reactive_action()
+        if self.can_reactive_decision():
+            self.simple_reactive_action()
         elif len(self.plan_queue) > 0 and not self.intention_success() and not self.impossible_intention():
             action = self.plan_queue.pop(0)
             if self.is_plan_sound(action):
@@ -156,13 +158,11 @@ class DroneHybrid(Drone):
             self.intention = {"Desire": Desire.Put_Out_Sector,
                               "Point": point}
         elif Desire.Move_to_Sector in desires:
-            point = self.point.closest_point_from_points(self.sectors_on_fire[0].sectorTiles)
-            self.target_sector = self.sectors_on_fire[0]
+            target = self.update_target_sector()
 
-            for sec in self.sectors_on_fire:
-                p2 = self.point.closest_point_from_points(sec.sectorTiles)
-                point = (point, p2)[self.point.distanceTo(p2) < self.point.distanceTo(point)]
-                self.target_sector = (self.target_sector, sec)[self.point.distanceTo(p2) < self.point.distanceTo(point)]
+            if target != self.target_sector:
+                self.target_sector = target
+                self.visited_sector_tiles = []
 
             tiles = [point for point in self.target_sector.sectorTiles if point not in self.drones_targets]
             self.intention = {"Desire": Desire.Move_to_Sector,
@@ -173,7 +173,13 @@ class DroneHybrid(Drone):
 
     # plan generation and rebuild
     def reconsider(self) -> bool:
-        return (self.intention.get("Desire") != Desire.Recharge) and self.needs_recharge()
+        desire = self.intention.get("Desire")
+        if desire != Desire.Recharge and self.needs_recharge():
+            return True
+        elif desire == Desire.Move_to_Sector:
+            target = self.update_target_sector()
+            return target != self.target_sector
+        return False
 
     def intention_success(self) -> bool:
         desire = self.intention.get("Desire")
@@ -280,6 +286,21 @@ class DroneHybrid(Drone):
     def drone_positions_list(self) -> list:
         return [drone.point for drone in self.simulation.drone_list if drone != self]
 
+    def update_target_sector(self) -> Sector:
+        sector_tiles = []
+        target_sector = self.target_sector
+
+        if not self.sectors_on_fire: return None
+
+        for sec in self.sectors_on_fire:
+            sector_tiles += sec.sectorTiles
+        point = self.point.closest_point_from_points(sector_tiles)
+        for sec in self.sectors_on_fire:
+            if point in sec.sectorTiles:
+                target_sector = sec
+                break
+        return target_sector
+
     def get_maximized_dists_point(self, points: List[Point]) -> Point:
         # filtered by sector
         drones = self.drone_positions_list()
@@ -293,11 +314,15 @@ class DroneHybrid(Drone):
 
     def most_interest_point(self) -> Point:
         if self.target_sector is None: return Point(-1, -1)
+        if self.visited_sector_tiles == self.target_sector.sectorTiles:
+            self.visited_sector_tiles = []
+
         if self.point not in self.visited_sector_tiles:
             self.visited_sector_tiles.append(self.point)
         non_visited = [p for p in self.fov
                        if p not in self.visited_sector_tiles
-                       and p not in self.drones_targets]
+                       and p not in self.drones_targets
+                       and self.map[p].__class__ != Water]
 
         # filtered by sector and fire
         on_fire = [p for p in non_visited if self.map[p].on_fire and p in self.target_sector.sectorTiles]

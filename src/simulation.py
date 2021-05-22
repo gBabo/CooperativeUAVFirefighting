@@ -413,11 +413,6 @@ class Simulation:
     # End things
 
     def check_end_conditions(self):
-        # All Drones Dead
-        if len(self.drone_list) == 0:
-            print("All Drones Died")
-            return True
-
         # All Fires Dead and Calculate Total Priority Burned
         priority_value_burned = 0
         end = True
@@ -434,7 +429,7 @@ class Simulation:
         # All Population tiles dead
         end = True
         for population_tile in self.population_list:
-            if population_tile.integrity != 0:
+            if population_tile.integrity >= 0:
                 end = False
 
         if end:

@@ -1,7 +1,6 @@
 import random
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
-from math import sqrt
 from collections import deque
 
 
@@ -34,8 +33,8 @@ class Point:
     x: int
     y: int
 
-    def distanceTo(self, toPoint):
-        return sqrt((toPoint.x - self.x) ** 2 + (toPoint.y - self.y) ** 2)
+    def distanceTo(self, toPoint) -> int:
+        return abs(toPoint.x - self.x) + abs(toPoint.y - self.y)
 
     def closest_point_from_tiles(self, tiles):
         point = tiles[0].point
