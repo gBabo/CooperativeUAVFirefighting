@@ -1,6 +1,8 @@
+from typing import List
+
 from drone import Drone
 from settings import *
-from src.sector import Sector
+from sector import Sector
 from util import *
 from tile import Population, Water
 

@@ -75,7 +75,7 @@ class Simulation:
             if self.check_end_conditions():
                 print("------------Simulation END------------")
                 self.calculate_metrics()
-
+                self.running, self.playing = False, False
                 while self.playing and self.running:
                     self.check_events()
                 break
@@ -368,6 +368,9 @@ class Simulation:
         return end
 
     def calculate_metrics(self):
+        file = open("metric_file.txt", "a")
+        average_time = 0
+        time_count = 0
         print("Total Steps:", self.step_counter)
         print("Number of Fires:", len(self.wildfire_list))
         total_distance = total_priority_burned = n_tiles = 0
@@ -385,9 +388,15 @@ class Simulation:
             # fire time to extinguish
             if wildfire.stop_time:
                 print("Time to extinguish:", wildfire.stop_time - wildfire.start_time)
+                average_time += wildfire.stop_time - wildfire.start_time
+                time_count += 1
             else:
                 print("Time to extinguish: Was not extinguished.")
 
         print("--------------------------------------\nTotal Priority On Fire and Burned:", total_priority_burned)
         print("Average Tile Priority On Fire and Burned:", total_priority_burned / n_tiles)
         print("Average Max Fire Spread Distance:", total_distance / len(self.wildfire_list))
+        # Avg time wildfire, Total priority burned, avg priority burned, Avg Max fire spread
+        file.write(str(average_time/time_count) + ',' + str(total_priority_burned) + ', '
+                   + str(total_priority_burned / n_tiles) + ', ' + str(total_distance / len(self.wildfire_list)) + '\n')
+        file.close()
