@@ -274,8 +274,9 @@ class DroneHybrid(Drone):
     def needs_recharge(self) -> bool:
         populations = [tile for tile in self.map.values() if tile.__class__ == Population]
         closest_recharge_point = self.point.closest_point_from_tiles(populations)
-        return (number_of_steps_from_x_to_y(self.point, closest_recharge_point) + DRONENUMBERS - self.simulation.drones_recharge + 4) \
-            * MOVEBATTERYCOST >= self.battery
+        return (number_of_steps_from_x_to_y(self.point,
+                                            closest_recharge_point) + DRONENUMBERS - self.simulation.drones_recharge + 4) \
+               * MOVEBATTERYCOST >= self.battery
 
     def sector_on_fire(self) -> bool:
         return self.sectors_on_fire != []
@@ -319,11 +320,12 @@ class DroneHybrid(Drone):
         if self.point not in self.visited_sector_tiles:
             self.visited_sector_tiles.append(self.point)
         non_visited = [p for p in self.fov
-                       if p not in self.visited_sector_tiles
+                       if (p not in self.visited_sector_tiles
+                           or self.map[p].on_fire)
                        and p not in self.drones_targets]
 
         # filtered by sector and fire
-        on_fire = [p for p in non_visited if self.map[p].on_fire and p in self.target_sector.sectorTiles]
+        on_fire = [p for p in non_visited if self.map[p].on_fire]
         not_on_fire = [p for p in non_visited if p in self.target_sector.sectorTiles]
         interests = (not_on_fire, on_fire)[len(on_fire) > 0]
         if not interests: return Point(-1, -1)

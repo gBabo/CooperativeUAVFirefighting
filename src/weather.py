@@ -16,6 +16,7 @@ class Wildfire:
     start_location: Point = field(compare=False)
     start_time: int = field(default=1, compare=False)
     points: List[Point] = field(default_factory=list, compare=False)
+    burned_points: List[Point] = field(default_factory=list, compare=False)
     tiles: List[Tile] = field(default_factory=list, compare=False)
     tiles_burned: List[Tile] = field(default_factory=list, compare=False)
     stop_time: int = field(default=0, compare=False)
@@ -24,6 +25,7 @@ class Wildfire:
         return "Wildfire ID: " + str(self.wid) \
                + "\nStart Location: " + str(self.start_location) \
                + "\nPoints: " + str(len(self.points)) \
+               + "\nBurned Points: " + str(len(self.burned_points)) \
                + "\nTiles OnFire: " + str(len(self.tiles)) \
                + "\nTiles Burned: " + str(len(self.tiles_burned))
 
@@ -31,6 +33,11 @@ class Wildfire:
         if tile.point not in self.points:
             self.points.append(tile.point)
             self.tiles.append(tile)
+
+    def add_burned(self, tile: Tile):
+        if tile.point not in self.burned_points:
+            self.burned_points.append(tile.point)
+            self.tiles_burned.append(tile)
 
     def max_fire_spread_distance(self):
         max_distance = 1
@@ -55,17 +62,18 @@ class Wildfire:
 
 def update_wildfire(wild: Wildfire) -> None:
     for tile in wild.tiles:
+        if not tile.on_fire: continue
         decreased = tile.integrity - tile.fire_intensity
         tile.integrity = (MIN_INTEGRITY, decreased)[decreased > MIN_INTEGRITY]
 
-        if tile.integrity == 0:
+        if tile.integrity <= 0 and tile.fire_intensity > 0:
             decreased = tile.fire_intensity - DECAY
             tile.fire_intensity = (MIN_FIRE, decreased)[decreased > MIN_FIRE]
+            wild.add_burned(tile)
         elif decreased > 0 and tile.fire_intensity < MAX_FIRE:
             tile.fire_intensity += 1
 
         if tile.fire_intensity <= 0:
-            wild.tiles_burned.append(tile)
             tile.on_fire = False
     wild.tiles = [tile for tile in wild.tiles if tile.on_fire]
 
