@@ -1,3 +1,5 @@
+from typing import List
+
 from drone import Drone
 from settings import *
 from sector import Sector
