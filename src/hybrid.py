@@ -1,5 +1,3 @@
-from typing import List
-
 from drone import Drone
 from settings import *
 from sector import Sector
@@ -283,7 +281,7 @@ class DroneHybrid(Drone):
         closest_recharge_point = self.point.closest_point_from_tiles(populations)
         return (number_of_steps_from_x_to_y(self.point,
                                             closest_recharge_point) + DRONENUMBERS - self.simulation.drones_recharge + 4) \
-               * MOVEBATTERYCOST >= self.battery
+            * MOVEBATTERYCOST >= self.battery
 
     def too_far_recharge(self) -> bool:
         populations = [tile for tile in self.map.values() if tile.__class__ == Population]
