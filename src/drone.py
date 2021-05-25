@@ -106,7 +106,7 @@ class Drone(pygame.sprite.Sprite, ABC):
             self.battery = 0
 
     def recover_inactive(self):
-        if self.battery >= BATTERY:
+        if self.battery + BATTERY/5 >= BATTERY:
             self.battery = (self.battery, BATTERY)[self.battery > BATTERY]
             self.inactive = False
         if self.inactive:

@@ -1,6 +1,6 @@
 from drone import Drone
 from settings import *
-from src.sector import Sector
+from sector import Sector
 from util import *
 from tile import Population, Water
 
@@ -125,6 +125,7 @@ class DroneHybrid(Drone):
             desires.append(Desire.Recharge)
         if self.sector_on_fire():
             on_sec = False
+
             for sec in self.sectors_on_fire:
                 if self.point in sec.sectorTiles:
                     on_sec = True
@@ -177,6 +178,7 @@ class DroneHybrid(Drone):
     def reconsider(self) -> bool:
         desire = self.intention.get("Desire")
         if desire != Desire.Recharge and self.needs_recharge():
+            self.inactive = True
             return True
         elif desire == Desire.Move_to_Sector:
             target = self.update_target_sector()
@@ -200,7 +202,10 @@ class DroneHybrid(Drone):
             return [point for point in self.fov if self.map[point].on_fire] != []
 
     def impossible_intention(self) -> bool:
-        if self.intention.get("Desire") == Desire.Move_to_Sector and self.target_sector is None:
+        desire = self.intention.get("Desire")
+        if desire == Desire.Recharge and self.too_far_recharge():
+            return True
+        elif desire == Desire.Move_to_Sector and self.target_sector is None:
             return True
         return False
 
@@ -278,6 +283,11 @@ class DroneHybrid(Drone):
                                             closest_recharge_point) + DRONENUMBERS - self.simulation.drones_recharge + 4) \
                * MOVEBATTERYCOST >= self.battery
 
+    def too_far_recharge(self) -> bool:
+        populations = [tile for tile in self.map.values() if tile.__class__ == Population]
+        closest_recharge_point = self.point.closest_point_from_tiles(populations)
+        return number_of_steps_from_x_to_y(self.point, closest_recharge_point) * MOVEBATTERYCOST > self.battery
+
     def sector_on_fire(self) -> bool:
         return self.sectors_on_fire != []
 
@@ -296,8 +306,6 @@ class DroneHybrid(Drone):
     def update_target_sector(self) -> Sector:
         sector_tiles = []
         target_sector = self.target_sector
-
-        if not self.sectors_on_fire: return None
 
         for sec in self.sectors_on_fire:
             sector_tiles += sec.sectorTiles
