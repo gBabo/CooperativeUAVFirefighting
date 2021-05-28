@@ -92,7 +92,7 @@ class Drone(pygame.sprite.Sprite, ABC):
         if self.water_capacity != 0:
             tile = self.simulation.tile_dict[self.point]
             self.release_water()
-            tile.fire_intensity -= 5
+            tile.fire_intensity -= FIRE_INTENSITY_DECREASE
             tile.wet = True
             print(f"{self.id}: Released Water")
 

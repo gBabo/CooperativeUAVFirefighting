@@ -218,7 +218,7 @@ class DroneHybrid(Drone):
         elif desire == Desire.Refuel:
             self.plan_queue.append(Action.Refuel)
 
-        print(desire)
+        # print(desire)
         # print(self.plan_queue)
 
     def build_path_plan(self, start: Point, dest: Point):
@@ -273,7 +273,6 @@ class DroneHybrid(Drone):
 
     # check desires
     def needs_refuel(self) -> bool:
-        # TODO possibly allow drone to go refill before is empty
         return self.water_capacity == 0
 
     def needs_recharge(self) -> bool:
@@ -309,6 +308,10 @@ class DroneHybrid(Drone):
 
         for sec in self.sectors_on_fire:
             sector_tiles += sec.sectorTiles
+
+        if not sector_tiles:
+            return self.target_sector
+
         point = self.point.closest_point_from_points(sector_tiles)
         for sec in self.sectors_on_fire:
             if point in sec.sectorTiles:

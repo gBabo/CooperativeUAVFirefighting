@@ -49,3 +49,4 @@ DECAY = 1
 # end conditions
 #                     pop + extra
 MAX_PRIORITY_BURNED = 36*10 + 10
+FIRE_INTENSITY_DECREASE = 5

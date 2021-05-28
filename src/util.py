@@ -66,8 +66,7 @@ class Point:
         q.append(src)
  
         # set to check if the matrix cell is visited before or not
-        visited = []
-        visited.append(fromPoint)
+        visited = [fromPoint]
 
         # Below lists detail all four possible movements from a cell
         row = (-1, 0, 0, 1)
@@ -90,12 +89,12 @@ class Point:
                 # from the current position
                 if isValid(adj_point):
                     # construct the next cell node
-                    next = Node(adj_point.x, adj_point.y, curr)
+                    following = Node(adj_point.x, adj_point.y, curr)
  
                     # if it isn't visited yet
                     if adj_point not in visited:
                         # enqueue it and mark it as visited
-                        q.append(next)
+                        q.append(following)
                         visited.append(adj_point)
  
         # return None if the path is not possible
