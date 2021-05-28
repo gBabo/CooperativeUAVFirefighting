@@ -1,6 +1,8 @@
 # CooperativeUAVFireFighting
 Project for AASMA course (UAV firefighting simulation)
 
+For this project we have using python version 3.8.
+
 In order to run this simulator make sure the **main.py** executable is
 in the src folder;  
 Next, make sure to have installed the pygame library as it is necessary for the simulation;
